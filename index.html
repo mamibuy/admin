@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mamibuy 行政交接系統</title>
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+<style>
+:root {
+  --navy:#1B3A5C; --teal:#0E7490; --tealLight:#0EA5C9;
+  --offwhite:#F0F9FF; --accent:#F59E0B; --red:#DC2626;
+  --green:#16A34A; --gray:#64748B; --border:#e2e8f0;
+  --shadow:0 1px 3px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.06);
+  --r:8px; --rs:4px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Noto Sans TC","Microsoft JhengHei",sans-serif;background:var(--offwhite);color:#1e293b;font-size:14px;min-height:100vh}
+/* Header */
+.hdr{background:var(--navy);color:#fff;padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.hdr-title{font-size:16px;font-weight:700}
+.hdr-r{display:flex;align-items:center;gap:8px}
+.sync-lbl{font-size:12px;display:flex;align-items:center;gap:4px}
+.sync-btn{background:rgba(255,255,255,.15);border:none;color:#fff;padding:5px 10px;border-radius:var(--rs);cursor:pointer;font-size:13px}
+.sync-btn:hover{background:rgba(255,255,255,.25)}
+.cfg-btn{background:none;border:none;color:#fff;cursor:pointer;font-size:18px;padding:4px;line-height:1}
+/* Tabs */
+.tabs{background:#fff;border-bottom:1px solid var(--border);display:flex;overflow-x:auto;scrollbar-width:none;padding:0 8px;position:sticky;top:52px;z-index:99}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:12px 14px;border:none;background:none;cursor:pointer;font-size:13px;color:var(--gray);white-space:nowrap;border-bottom:2px solid transparent;font-family:inherit;transition:color .15s,border-color .15s}
+.tab:hover{color:var(--teal)}
+.tab.on{color:var(--teal);border-bottom-color:var(--teal);font-weight:600}
+/* Content */
+.pane{display:none;padding:16px;max-width:1200px;margin:0 auto}
+.pane.on{display:block}
+/* Cards */
+.card{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);padding:16px;margin-bottom:12px}
+/* Buttons */
+.btn{padding:7px 14px;border:none;border-radius:var(--rs);cursor:pointer;font-size:13px;font-family:inherit;font-weight:500;transition:opacity .15s;display:inline-flex;align-items:center;gap:4px}
+.btn:hover{opacity:.85}
+.btn-p{background:var(--teal);color:#fff}
+.btn-d{background:var(--red);color:#fff}
+.btn-g{background:transparent;color:var(--gray);border:1px solid var(--border)}
+.btn-g:hover{background:var(--offwhite)}
+.btn-a{background:var(--accent);color:#fff}
+.btn-s{padding:4px 8px;font-size:12px}
+/* Badges */
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;line-height:1.5}
+.badge-u{background:#fee2e2;color:var(--red)}
+.tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;color:#fff}
+/* Forms */
+.fg{margin-bottom:12px}
+.fl{display:block;font-size:12px;font-weight:600;color:var(--gray);margin-bottom:4px}
+.fi,.fs,.ft{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--rs);font-size:13px;font-family:inherit;transition:border-color .15s;background:#fff}
+.fi:focus,.fs:focus,.ft:focus{outline:none;border-color:var(--teal)}
+.ft{resize:vertical;min-height:80px}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.fr{grid-template-columns:1fr}}
+/* Modal */
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:center;justify-content:center;padding:16px}
+.mo.on{display:flex}
+.mb{background:#fff;border-radius:var(--r);width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 40px rgba(0,0,0,.2)}
+.mb-hd{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:15px;position:sticky;top:0;background:#fff;z-index:1}
+.mb-x{background:none;border:none;cursor:pointer;font-size:18px;color:var(--gray);line-height:1}
+.mb-bd{padding:16px 20px}
+.mb-ft{padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;position:sticky;bottom:0;background:#fff}
+/* Settings */
+.sp{position:fixed;top:0;right:0;bottom:0;width:320px;background:#fff;box-shadow:-4px 0 20px rgba(0,0,0,.15);z-index:300;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s ease}
+.sp.on{transform:translateX(0)}
+.sp-hd{padding:16px 20px;background:var(--navy);color:#fff;font-weight:700;font-size:15px;display:flex;justify-content:space-between;align-items:center}
+.sp-bd{padding:20px;flex:1;overflow-y:auto}
+.sp-ft{padding:16px 20px;border-top:1px solid var(--border)}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:250;display:none}
+.ov.on{display:block}
+/* Dashboard */
+.date-hd{background:linear-gradient(135deg,var(--navy),var(--teal));color:#fff;border-radius:var(--r);padding:16px;margin-bottom:12px}
+.date-m{font-size:22px;font-weight:700}
+.date-s{font-size:13px;opacity:.8;margin-top:2px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.stat{background:#fff;border-radius:var(--r);padding:14px;text-align:center;box-shadow:var(--shadow)}
+.stat-n{font-size:28px;font-weight:700;line-height:1}
+.stat-l{font-size:11px;color:var(--gray);margin-top:4px}
+.n-td{color:var(--teal)} .n-dn{color:var(--green)} .n-ug{color:var(--red)}
+.sec-t{font-size:13px;font-weight:700;color:var(--navy);margin:16px 0 8px;display:flex;align-items:center;gap:6px}
+.todo{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;background:#fff;border-radius:var(--rs);margin-bottom:6px;box-shadow:var(--shadow);border-left:3px solid var(--border);transition:opacity .2s}
+.todo.done{opacity:.5}
+.todo.urg{border-left-color:var(--red)}
+.todo input[type=checkbox]{width:16px;height:16px;cursor:pointer;flex-shrink:0;margin-top:2px;accent-color:var(--teal)}
+.todo-c{flex:1;min-width:0}
+.todo-n{font-size:13px;font-weight:500}
+.todo-m{font-size:11px;color:var(--gray);margin-top:2px}
+.todo-acts{display:flex;gap:4px;flex-shrink:0}
+/* Tasks */
+.fbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.fbar .fs{width:auto;min-width:110px}
+.fbar .fi{flex:1;min-width:160px}
+.tc{background:#fff;border-radius:var(--r);padding:14px;margin-bottom:8px;box-shadow:var(--shadow);display:flex;gap:12px;align-items:flex-start}
+.tc-m{flex:1;min-width:0}
+.tc-n{font-size:14px;font-weight:600;margin-bottom:4px}
+.tc-mt{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--gray)}
+.tc-note{font-size:12px;color:var(--gray);margin-top:6px;line-height:1.5}
+.tc-acts{display:flex;gap:4px;flex-shrink:0}
+/* SOP */
+.sop-lay{display:grid;grid-template-columns:260px 1fr;gap:16px;align-items:start}
+@media(max-width:768px){.sop-lay{grid-template-columns:1fr}}
+.sop-lp{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.sop-lh{padding:12px;border-bottom:1px solid var(--border)}
+.sop-li{padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;display:flex;align-items:center;gap:8px}
+.sop-li:hover{background:var(--offwhite)}
+.sop-li.on{background:#e0f2fe}
+.sop-li:last-child{border-bottom:none}
+.sop-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sop-lt{font-size:13px;flex:1}
+.sop-dp{background:#fff;border-radius:var(--r);box-shadow:var(--shadow)}
+.sop-dh{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.sop-dt{font-size:16px;font-weight:700}
+.sop-db{padding:16px}
+.sop-content{line-height:1.7}
+.sop-content ol,.sop-content ul{padding-left:20px}
+.sop-content li{margin-bottom:6px}
+.sop-content h4{margin:12px 0 6px;font-size:14px}
+.sop-content p{margin-bottom:8px}
+.sop-content img{max-width:100%;height:auto;border-radius:var(--rs)}
+/* Accounts */
+.ac{background:#fff;border-radius:var(--r);padding:14px;margin-bottom:8px;box-shadow:var(--shadow)}
+.ac-hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.ac-n{font-size:14px;font-weight:700}
+.ac-co{font-size:11px;color:var(--gray)}
+.ac-row{display:flex;gap:8px;align-items:center;font-size:13px;margin-bottom:4px}
+.ac-k{color:var(--gray);font-size:11px;width:32px;flex-shrink:0}
+.ac-v{font-family:monospace;word-break:break-all;flex:1}
+.cpbtn{background:none;border:none;cursor:pointer;color:var(--teal);font-size:13px;padding:2px 4px}
+.cpbtn:hover{color:var(--navy)}
+.ulkbar{background:#fef3c7;border:1px solid var(--accent);border-radius:var(--rs);padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}
+/* Contacts */
+.ctc{background:#fff;border-radius:var(--r);padding:14px;margin-bottom:8px;box-shadow:var(--shadow);display:flex;gap:12px;align-items:flex-start}
+.ctc-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0}
+.ctc-m{flex:1;min-width:0}
+.ctc-n{font-size:14px;font-weight:700}
+.ctc-r{font-size:12px;color:var(--gray);margin-bottom:4px}
+.ctc-i{font-size:12px;display:flex;flex-wrap:wrap;gap:8px}
+/* Callguide */
+.cgc{background:#fff;border-radius:var(--r);padding:14px;margin-bottom:8px;box-shadow:var(--shadow);border-left:3px solid var(--teal)}
+.cgc-sc{font-size:14px;font-weight:700;margin-bottom:6px;color:var(--navy)}
+.cgc-h{font-size:13px;line-height:1.6;color:#334155}
+.cgc-mt{font-size:11px;color:var(--gray);margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+/* Notices */
+.notice{padding:10px 14px;border-radius:var(--rs);font-size:13px;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.n-warn{background:#fef3c7;border:1px solid #fbbf24;color:#92400e}
+.n-info{background:#e0f2fe;border:1px solid var(--tealLight);color:var(--navy)}
+.n-ok{background:#dcfce7;border:1px solid #86efac;color:#15803d}
+/* Toast */
+.tc-wrap{position:fixed;bottom:20px;right:20px;z-index:500;display:flex;flex-direction:column;gap:8px}
+.toast{background:#1e293b;color:#fff;padding:10px 16px;border-radius:var(--rs);font-size:13px;box-shadow:var(--shadow);animation:si .2s ease;max-width:280px}
+.toast.ok{background:var(--green)} .toast.err{background:var(--red)}
+@keyframes si{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+/* Layout helpers */
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.st{font-size:15px;font-weight:700;color:var(--navy)}
+.empty{text-align:center;padding:32px;color:var(--gray);font-size:13px}
+/* Weekday picker */
+.wdp{display:flex;gap:6px;flex-wrap:wrap}
+.wdb{padding:4px 10px;border:1px solid var(--border);border-radius:999px;cursor:pointer;font-size:12px;background:#fff;font-family:inherit;transition:background .15s,color .15s}
+.wdb.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+/* Color swatches */
+.csrow{display:flex;gap:8px;flex-wrap:wrap}
+.cs{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color .15s}
+.cs.on{border-color:#000}
+/* Datalist arrow */
+input[list]::-webkit-calendar-picker-indicator{display:none}
+/* Quill overrides */
+.ql-container{font-family:inherit;font-size:13px}
+.ql-toolbar.ql-snow{border-radius:var(--rs) var(--rs) 0 0}
+.ql-container.ql-snow{border-radius:0 0 var(--rs) var(--rs);height:320px}
+.ql-editor{height:100%;overflow-y:auto;box-sizing:border-box}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-title">📋 mamibuy 行政交接</div>
+  <div class="hdr-r">
+    <span id="syncLbl" class="sync-lbl">🟡 載入中</span>
+    <button class="sync-btn" onclick="triggerSync()">🔄 同步</button>
+    <button class="cfg-btn" onclick="toggleSettings()">⚙️</button>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab on" data-tab="dashboard" onclick="switchTab('dashboard')">🏠 儀表板</button>
+  <button class="tab" data-tab="tasks" onclick="switchTab('tasks')">📅 例行公事</button>
+  <button class="tab" data-tab="sops" onclick="switchTab('sops')">📖 SOP</button>
+  <button class="tab" data-tab="accounts" onclick="switchTab('accounts')">🔐 帳密</button>
+  <button class="tab" data-tab="phone" onclick="switchTab('phone')">📞 總機</button>
+</nav>
+
+<div id="p-dashboard" class="pane on"></div>
+<div id="p-tasks" class="pane"></div>
+<div id="p-sops" class="pane"></div>
+<div id="p-accounts" class="pane"></div>
+<div id="p-phone" class="pane"></div>
+
+<!-- Settings panel -->
+<div class="ov" id="spOv" onclick="toggleSettings()"></div>
+<div class="sp" id="spPanel">
+  <div class="sp-hd">
+    <span>⚙️ 設定</span>
+    <button style="background:none;border:none;color:#fff;cursor:pointer;font-size:18px;" onclick="toggleSettings()">✕</button>
+  </div>
+  <div class="sp-bd">
+    <div class="fg">
+      <label class="fl">Apps Script Web App URL</label>
+      <input id="cfgUrl" type="text" class="fi" placeholder="https://script.google.com/macros/s/..." style="font-size:11px;">
+      <div style="font-size:11px;color:var(--gray);margin-top:4px;">部署 code.gs 後貼入</div>
+    </div>
+    <div class="fg">
+      <label class="fl">Drive 圖片資料夾 ID（選填）</label>
+      <input id="cfgFolder" type="text" class="fi" placeholder="1ABCxyz..." style="font-size:11px;">
+      <div style="font-size:11px;color:var(--gray);margin-top:4px;">Drive 資料夾 URL 中的 ID</div>
+    </div>
+    <div id="cfgStatus"></div>
+    <hr style="margin:16px 0;border:none;border-top:1px solid var(--border);">
+    <div style="font-size:12px;color:var(--gray);margin-bottom:8px;">資料管理</div>
+    <button class="btn btn-a" style="width:100%;margin-bottom:8px;" onclick="doInitSeed()">🌱 初始化預設資料到 Sheets</button>
+    <button class="btn btn-g" style="width:100%;margin-bottom:8px;" onclick="clearCache()">🗑️ 清除本地快取</button>
+    <button class="btn btn-g" style="width:100%;" onclick="triggerSync()">🔄 立即同步</button>
+  </div>
+  <div class="sp-ft">
+    <button class="btn btn-p" style="width:100%;" onclick="saveSettings()">儲存設定</button>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="mo" id="modalOv">
+  <div class="mb" id="modalBox">
+    <div class="mb-hd"><span id="modalTitle"></span><button class="mb-x" onclick="closeModal()">✕</button></div>
+    <div class="mb-bd" id="modalBody"></div>
+    <div class="mb-ft" id="modalFt"></div>
+  </div>
+</div>
+
+<!-- Confirm -->
+<div class="mo" id="cfmOv">
+  <div class="mb" style="max-width:360px;">
+    <div class="mb-hd"><span id="cfmTitle">確認</span><button class="mb-x" onclick="closeCfm()">✕</button></div>
+    <div class="mb-bd" id="cfmBody"></div>
+    <div class="mb-ft">
+      <button class="btn btn-g" onclick="closeCfm()">取消</button>
+      <button class="btn btn-d" id="cfmOk">確認刪除</button>
+    </div>
+  </div>
+</div>
+
+<div class="tc-wrap" id="toasts"></div>
+
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+<script>
+// ── SEED DATA ────────────────────────────────────────────────
+const SEED_DATA = {
+  tasks: [
+    {id:"c_001",name:"辦公室環境整潔及設備確認",freq:"daily",cat:"行政",weekdays:[],monthDays:[],note:"確認前台接待區整潔、設備正常運作",urgent:false,sopId:""},
+    {id:"c_002",name:"電話總機接聽與轉接",freq:"daily",cat:"行政",weekdays:[],monthDays:[],note:"依聯繫事項分類轉接，窗口不在時留下姓名電話事由",urgent:false,sopId:""},
+    {id:"c_003",name:"境外廣告費刷卡確認（玉山網銀）",freq:"daily",cat:"財務",weekdays:[],monthDays:[],note:"每天至玉山網銀確認FB/Google/Make/ChatGPT等境外交易，扣繳須於刷卡後10日內完成",urgent:true,sopId:"sop_011"},
+    {id:"c_004",name:"郵局寄信",freq:"weekly",cat:"行政",weekdays:[2,5],monthDays:[],note:"固定每週二、五前往郵局寄信，記錄寄件資料至雲端紀錄表",urgent:false,sopId:""},
+    {id:"c_005",name:"水果日採購",freq:"weekly",cat:"行政",weekdays:[2],monthDays:[],note:"固定每週二辦理水果補充",urgent:false,sopId:""},
+    {id:"c_006",name:"零食訂購",freq:"monthly",cat:"行政",weekdays:[],monthDays:["月初"],note:"每月補充辦公室零食，金額上限NT$1,000元，費用從零用金支出",urgent:false,sopId:""},
+    {id:"c_007",name:"新竹物流費用請款",freq:"monthly",cat:"物流",weekdays:[],monthDays:["月初"],note:"月初收到上月明細後分部門統計；簽核：行政→社群→企劃/業務",urgent:false,sopId:"sop_001"},
+    {id:"c_008",name:"大樓管委會費用請款",freq:"monthly",cat:"行政",weekdays:[],monthDays:[15],note:"月初收到單子後請款，匯款日期當月15號；未收到須提醒管委會",urgent:false,sopId:""},
+    {id:"c_009",name:"富兒房租請款",freq:"monthly",cat:"財務",weekdays:[],monthDays:[15],note:"每月15號付款，月初申請；發票未到可先填支出單",urgent:false,sopId:""},
+    {id:"c_010",name:"電話費請款（台哥大/遠傳/中華三合一）",freq:"monthly",cat:"行政",weekdays:[],monthDays:["月中"],note:"注意三家金額加總，給會計的電子發票一律印兩張",urgent:false,sopId:""},
+    {id:"c_011",name:"台灣日通費用請款",freq:"monthly",cat:"物流",weekdays:[],monthDays:["月底"],note:"次月25號匯款，需給社群、業務、企劃傳閱",urgent:false,sopId:""},
+    {id:"c_012",name:"樂思達MIS費用請款",freq:"monthly",cat:"財務",weekdays:[],monthDays:["月初"],note:"付當月，月初給發票，當月25號匯款",urgent:false,sopId:""},
+    {id:"c_013",name:"Neo資訊服務費請款（玖云）",freq:"monthly",cat:"財務",weekdays:[],monthDays:[25],note:"次月25號匯款；113/7起服務費88,000元，發票後補",urgent:false,sopId:""},
+    {id:"c_014",name:"黃先生打掃費請款",freq:"monthly",cat:"行政",weekdays:[],monthDays:["月初"],note:"每月$8,400，當月25號匯款",urgent:false,sopId:""},
+    {id:"c_015",name:"群錄印表機廠商費用請款",freq:"monthly",cat:"行政",weekdays:[],monthDays:["月底"],note:"雙月結一次，雙數月底應收",urgent:false,sopId:""},
+    {id:"c_016",name:"水費請款",freq:"monthly",cat:"行政",weekdays:[],monthDays:["月中"],note:"兩月一次（單數月中），附發票+明細",urgent:false,sopId:""},
+    {id:"c_017",name:"電費請款",freq:"monthly",cat:"行政",weekdays:[],monthDays:["月底"],note:"每月月底，附發票+明細",urgent:false,sopId:""},
+    {id:"c_018",name:"紳太零用金補充",freq:"monthly",cat:"財務",weekdays:[],monthDays:["月底"],note:"月底連同匯太零用金一併送出",urgent:false,sopId:""},
+    {id:"c_019",name:"匯太零用金補充",freq:"monthly",cat:"財務",weekdays:[],monthDays:["月底"],note:"月底連同紳太零用金一併送出",urgent:false,sopId:""},
+    {id:"c_020",name:"電子發票字軌取號",freq:"monthly",cat:"財務",weekdays:[],monthDays:[1],note:"每單月1日，對象：紳太/匯太/和和研",urgent:false,sopId:"sop_008"},
+    {id:"c_021",name:"上傳空白發票字軌",freq:"monthly",cat:"財務",weekdays:[],monthDays:[6,7,8,9],note:"每單月10日前完成，違規記點超過三點罰鍰",urgent:true,sopId:"sop_009"},
+    {id:"c_022",name:"大筆平台發票切本",freq:"monthly",cat:"財務",weekdays:[],monthDays:["月初"],note:"雙月執行；第1~2本留內部，第3本以後給和和研",urgent:false,sopId:"sop_010"},
+    {id:"c_023",name:"台灣日通（和和研）對帳",freq:"monthly",cat:"財務",weekdays:[],monthDays:[15],note:"對帳無誤後在LINE群組裡請日通開發票",urgent:false,sopId:""},
+    {id:"c_024",name:"匯太月初租金申請",freq:"monthly",cat:"財務",weekdays:[],monthDays:["月初"],note:"附上發票（紳太章）",urgent:false,sopId:"sop_012"},
+    {id:"c_025",name:"元貿車位費用請款",freq:"temp",cat:"行政",weekdays:[],monthDays:[],note:"每年7月付款",urgent:false,sopId:""},
+    {id:"c_026",name:"退票處理",freq:"temp",cat:"客服",weekdays:[],monthDays:[],note:"一律不收手續費；F Hotel需先與步步親子旅遊確認",urgent:false,sopId:"sop_002"},
+    {id:"c_027",name:"消費者運費入帳處理",freq:"temp",cat:"財務",weekdays:[],monthDays:[],note:"廣告部用玉山#27928，社群部用國泰",urgent:false,sopId:"sop_013"},
+    {id:"c_028",name:"境外廣告費扣繳申報",freq:"temp",cat:"財務",weekdays:[],monthDays:[],note:"刷卡後10日內完成",urgent:true,sopId:"sop_011"},
+    {id:"c_029",name:"普渡準備",freq:"temp",cat:"行政",weekdays:[],monthDays:[],note:"採購零食泡麵、三種水果（單數）、金紙、臉盆毛巾牙刷",urgent:false,sopId:"sop_003"},
+    {id:"c_030",name:"開工拜拜準備",freq:"temp",cat:"行政",weekdays:[],monthDays:[],note:"採購發粿、三種水果（單數）、金紙、環保鞭炮",urgent:false,sopId:"sop_004"},
+    {id:"c_031",name:"合約用印處理",freq:"temp",cat:"行政",weekdays:[],monthDays:[],note:"確認流水號合約編號，核對雲端登記表",urgent:false,sopId:"sop_005"},
+    {id:"c_032",name:"新同仁識別證製作",freq:"temp",cat:"行政",weekdays:[],monthDays:[],note:"寄信給設計，手機下載Pringo APP列印",urgent:false,sopId:"sop_006"},
+    {id:"c_033",name:"董事會場地設備準備",freq:"temp",cat:"行政",weekdays:[],monthDays:[],note:"2台電腦+1支手機，確認HDMI空調瓶裝水",urgent:false,sopId:"sop_014"},
+    {id:"c_034",name:"開立電子發票",freq:"temp",cat:"財務",weekdays:[],monthDays:[],note:"收到委刊單後開立，廣告部CC Evan",urgent:false,sopId:"sop_012"}
+  ],
+  sops: [
+    {id:"sop_001",title:"新竹物流每月請款",cat:"finance",updatedAt:"2026-06-11",html:"<ol><li>月初收到上月運費明細及電子發票，存入公槽：<em>全公司/管理部/Admin/002帳單/新竹物流</em></li><li>依部門分類並統計各部門金額，更新支出申請單</li><li>核對雲端與新竹物流寄件登記表數量</li><li>申請單格式：<strong>(部門) 共計：(金額)元</strong>；業務部加【專案名稱】(年分/季度)-委刊單號</li><li>附上支出申請單、發票、樞紐分析總表、運費明細、企劃託運總表、單筆託運單</li><li><strong>簽核：行政→社群→企劃/業務</strong></li></ol>"},
+    {id:"sop_002",title:"退票處理流程（電子票券）",cat:"admin",updatedAt:"2026-06-11",html:"<p><strong>重要：一律不收手續費</strong>（已與Kirstin確認），需以信箱往來留存紀錄。</p><ol><li>確認客戶資料（訂單編號、大名、電話、票券照片）</li><li>至MamiBuy後台→訂單管理→1-訂單查詢，確認是否已使用</li><li>確認後更新金流單</li><li>傳退票流程給客戶（折讓單寄送地址：台北市大安區忠孝東路四段212號11樓之1）</li><li>客戶提供個資後轉寄財務，請開折讓單</li><li>將折讓單、回郵信封、注意事項小單寄給客戶</li><li>收到折讓單交財會，紙本票卷一併附上</li><li>更新金流單退票進度</li></ol><p><em>F Hotel須先與「步步親子旅遊」確認。</em></p>"},
+    {id:"sop_003",title:"普渡準備與流程",cat:"admin",updatedAt:"2026-06-11",html:"<ol><li>購買零食泡麵（額度與主管確認）</li><li>三種水果：奇異果、蘋果、火龍果（<strong>單數</strong>）</li><li>金紙（普渡及地基主用）</li><li>與老闆確認日期→告知管理員</li><li>發信通知，LINE群附站位圖</li><li>印出講稿</li><li><strong>提前30分鐘</strong>至一樓準備，擺供品點蠟燭，供桌前放臉盆毛巾牙刷</li></ol>"},
+    {id:"sop_004",title:"開工拜拜準備與流程",cat:"admin",updatedAt:"2026-06-11",html:"<ol><li>購買零食泡麵（額度與主管確認）</li><li>發粿及三種水果：鳳梨（未削）、蘋果、橘子（<strong>單數</strong>）</li><li>金紙（開工及地基主用）及環保鞭炮</li><li>與老闆確認日期→告知管理員</li><li>發信附當日位置圖</li><li>印講稿</li><li>提前30分鐘擺供品</li><li>拜拜：獻酒三分滿→點香→唸文疏→插香爐→二次酒→三次酒→金紙三拜→燒金紙→燒香→放鞭炮→酒灑金爐</li></ol>"},
+    {id:"sop_005",title:"合約用印流程",cat:"admin",updatedAt:"2026-06-11",html:"<ol><li>確認「合約流水號」及「合約編號」</li><li>核對雲端合約登記表</li><li>我方未用印→送財會</li><li>廠商未用印→歸還申請人</li><li>雙方皆用印→一份還申請人、一份歸檔</li><li>歸檔前掃描，<strong>檔名：流水號－合約編號－合約名稱</strong></li></ol><p><em>雲端登記表：https://lurl.cc/bpSUts　存檔：管理部/Admin/Scan</em></p>"},
+    {id:"sop_006",title:"識別證製作",cat:"admin",updatedAt:"2026-06-11",html:"<ol><li>寄信給設計請製作圖檔</li><li>手機下載「Pringo」APP</li><li>開機後依APP指示操作（<em>需連Pringo無線網路</em>）</li></ol>"},
+    {id:"sop_007",title:"影印機掃描設定",cat:"admin",updatedAt:"2026-06-11",html:"<ol><li>主畫面→主選單→「通訊錄管理」</li><li>「新登錄」新增人員</li><li>填名稱與電子郵件→確定</li></ol>"},
+    {id:"sop_008",title:"電子發票字軌取號（單月1日）",cat:"invoice",updatedAt:"2026-06-11",html:"<ol><li>登入 https://www.einvoice.nat.gov.tw/</li><li>選取號期別、發票類別、最大本數→提交</li><li>查詢確認完成</li></ol><p><em>紳太28672056/匯太42718672/和和研60481225，帳號accounting</em></p><p><strong>密碼Mmb202501/Mmb202502輪替，改後通知所有會計</strong></p>"},
+    {id:"sop_009",title:"上傳空白發票字軌（單月10日前）",cat:"invoice",updatedAt:"2026-06-11",html:"<ol><li>查詢當期字軌號碼</li><li>營業人功能選單→發票查詢/列印/下載→全選下載EXCEL</li><li>確認跳號→上傳空白字軌</li><li>大筆等外部平台6日時確認正確性</li><li>截圖存公槽</li></ol><p><strong>⚠️ 逾期未上傳，違規記點，超過三點罰鍰</strong></p>"},
+    {id:"sop_010",title:"大筆平台發票切本（雙月）",cat:"invoice",updatedAt:"2026-06-11",html:"<ol><li>確認財政部已配號</li><li>登入 https://app.bigordr.com</li><li>進入【字軌管理】</li><li>選發票期別→【字軌切本】</li><li><strong>第1~2本留內部，第3本後給和和研</strong></li></ol>"},
+    {id:"sop_011",title:"境外廣告費扣繳申報",cat:"finance",updatedAt:"2026-06-11",html:"<ol><li><strong>每日</strong>至玉山網銀確認境外刷卡</li><li>查詢換算台幣金額</li><li>填公檔稅額表單</li><li>列印繳款單（etax.nat.gov.tw）</li><li>2萬以下超商繳款</li><li>線上申報並列印回執聯</li><li>存檔：回執聯、申報書、憑單、收據、傳票、INVOICE</li></ol><p><strong>⚠️ 刷卡後10日內完成</strong></p>"},
+    {id:"sop_012",title:"開立電子發票流程",cat:"invoice",updatedAt:"2026-06-11",html:"<ol><li>各部門線上申請（mamibuy.github.io/mamibuy/），核對委刊單金額</li><li>登入財政部平台</li><li>新增發票：發票本→統編→委刊單號→品項→未稅金額</li><li>儲存寄送→插工商憑證→密碼統編→確認</li><li>下載改檔名：<strong>委刊單號+客戶簡稱+X月發票</strong></li><li>寄各部門，<strong>廣告部CC Evan</strong></li><li>天心立應收帳→更新雲端</li></ol>"},
+    {id:"sop_013",title:"消費者運費入帳處理",cat:"finance",updatedAt:"2026-06-11",html:"<h4>廣告部（玉山#27928）</h4><ol><li>確認入帳</li><li>填雲端表「物流寄件及匯款明細」</li><li>通知「企劃X財務」群組</li><li>回填後開二聯發票（備註付款人）</li></ol><h4>社群部（國泰）</h4><ol><li>確認入帳</li><li>填「社群_活動匯款名單」→通知Tasha</li><li>開二聯發票</li><li>開啟其他收入單→新增→存檔</li><li>傳票確認→列印</li></ol>"},
+    {id:"sop_014",title:"董事會場地設備準備",cat:"meeting",updatedAt:"2026-06-11",html:"<ol><li>準備2台電腦（播PPT+錄影）及1支手機（錄音）</li><li>確認HDMI→連接→進入會議室</li><li>分享畫面→選視窗→分享</li><li>開攝像頭擺桌中</li><li>錄音手機放PPT電腦前端</li><li>確認衛生紙空調</li><li>電話挪開桌面</li><li>瓶裝水放側邊</li><li>主位放文件及原子筆（<strong>特定品牌</strong>）</li></ol>"}
+  ],
+  accounts: [
+    {id:"a_001",name:"財政部電子發票平台",company:"紳太",purpose:"字軌取號/上傳/開立",url:"https://www.einvoice.nat.gov.tw/",user:"accounting",pass:"",note:"統編28672056；密碼Mmb202501/Mmb202502輪替"},
+    {id:"a_002",name:"財政部電子發票平台",company:"匯太",purpose:"字軌取號/上傳",url:"https://www.einvoice.nat.gov.tw/",user:"accounting",pass:"",note:"統編42718672"},
+    {id:"a_003",name:"財政部電子發票平台",company:"和和研",purpose:"字軌取號/上傳",url:"https://www.einvoice.nat.gov.tw/",user:"accounting",pass:"",note:"統編60481225"},
+    {id:"a_004",name:"大筆後台（Bigordr）",company:"紳太/和和研",purpose:"發票字軌切本",url:"https://app.bigordr.com",user:"",pass:"",note:""},
+    {id:"a_005",name:"玉山網銀",company:"紳太",purpose:"境外刷卡確認/消費者運費",url:"https://gib.esunbank.com/",user:"ShanShan",pass:"",note:"統編28672056；帳號#27928為廣告部活動收款"},
+    {id:"a_006",name:"財政部電子申報繳稅",company:"紳太",purpose:"境外扣繳申報",url:"https://www.etax.nat.gov.tw/",user:"",pass:"",note:"文件標記Aa28672056"},
+    {id:"a_007",name:"MamiBuy管理後台",company:"mamibuy",purpose:"退票/訂單查詢",url:"",user:"",pass:"",note:"登入網址每週更新至個人信箱"},
+    {id:"a_008",name:"發票申請系統",company:"mamibuy",purpose:"線上申請開立發票",url:"https://mamibuy.github.io/mamibuy/",user:"",pass:"",note:""},
+    {id:"a_009",name:"遠傳電信ECP",company:"紳太",purpose:"市話NGN帳務",url:"",user:"28672056",pass:"",note:"客服0809-080-080；客戶帳號104681972"},
+    {id:"a_010",name:"天心主機",company:"紳太",purpose:"公司主機",url:"192.168.1.250",user:"",pass:"",note:""},
+    {id:"a_011",name:"廣告部物流雲端表",company:"mamibuy",purpose:"消費者運費匯款明細",url:"https://docs.google.com/spreadsheets/d/1lMHtdpXrpFSNRDSdEtuJuI5xpgvjwwsadceuSaYL41o/edit",user:"",pass:"",note:"有權限即可存取"},
+    {id:"a_012",name:"合約登記雲端表",company:"mamibuy",purpose:"合約用印進度",url:"https://lurl.cc/bpSUts",user:"",pass:"",note:""}
+  ],
+  contacts: [
+    {id:"ct_001",name:"Evan",role:"試用、商品及業務合作",email:"evantseng@mamibuy.com.tw",phone:"",color:"#0E7490"},
+    {id:"ct_002",name:"阿寧",role:"KOL業配、團購、境外扣繳",email:"ningchang@mamibuy.com.tw",phone:"",color:"#0E7490"},
+    {id:"ct_003",name:"Tasha",role:"官網登入、育兒箱、FB粉專",email:"tashahuang@mamibuy.com.tw",phone:"",color:"#0E7490"},
+    {id:"ct_004",name:"KOLA",role:"試用好康、百人試用、投票活動",email:"",phone:"",color:"#0E7490"},
+    {id:"ct_005",name:"財會",role:"會計相關",email:"accounting@mamibuy.com.tw",phone:"",color:"#1B3A5C"},
+    {id:"ct_006",name:"行政",role:"官網客服、遠傳ECP窗口",email:"service@mamibuy.com.tw",phone:"",color:"#1B3A5C"},
+    {id:"ct_007",name:"游小姐",role:"天心軟體設備",email:"",phone:"02-8768-3560 #9",color:"#64748B"},
+    {id:"ct_008",name:"黃先生（天心）",role:"天心硬體設備",email:"",phone:"02-8768-3335",color:"#64748B"},
+    {id:"ct_009",name:"黃先生（清潔）",role:"辦公室清潔$8,400/月",email:"",phone:"",color:"#64748B"},
+    {id:"ct_010",name:"步步親子旅遊",role:"F Hotel退票確認窗口",email:"queenyo3234@gmail.com",phone:"02-2246-3157",color:"#F59E0B"},
+    {id:"ct_011",name:"Jill",role:"用印負責人（每週二）",email:"",phone:"",color:"#64748B"}
+  ],
+  callguide: [
+    {id:"cg_001",scene:"客戶要退票",handling:"請客戶提供訂單編號、大名、電話、票券照片。一律不收手續費，以信箱往來留紀錄。",owner:"行政/財會",sopId:"sop_002"},
+    {id:"cg_002",scene:"F Hotel退票",handling:"須先與步步親子旅遊（queenyo3234@gmail.com / 02-2246-3157）確認客戶是否已使用過。",owner:"步步親子旅遊",sopId:"sop_002"},
+    {id:"cg_003",scene:"廠商申請分潤",handling:"查雲端合約表→印票券分潤頁及匯款帳號→與會計確認金額→告知廠商寄回發票及票券→填支出申請單。",owner:"行政/財會",sopId:""},
+    {id:"cg_004",scene:"試用/商品/業務合作",handling:"轉接 Evan。",owner:"Evan",sopId:""},
+    {id:"cg_005",scene:"KOL業配/團購",handling:"轉接 阿寧。",owner:"阿寧",sopId:""},
+    {id:"cg_006",scene:"官網登入/育兒箱/FB粉專",handling:"轉接 Tasha。",owner:"Tasha",sopId:""},
+    {id:"cg_007",scene:"會計帳務相關",handling:"轉接 財會。",owner:"財會",sopId:""},
+    {id:"cg_008",scene:"官網客服一般問題",handling:"行政處理（service@mamibuy.com.tw / LINE @mamibuy）。",owner:"行政",sopId:""},
+    {id:"cg_009",scene:"天心系統/設備問題",handling:"軟體→游小姐 02-8768-3560#9；硬體→黃先生 02-8768-3335。",owner:"天心",sopId:""},
+    {id:"cg_010",scene:"窗口不在位",handling:"留下姓名電話事由，通知窗口回撥。重要事項引導信箱往來。",owner:"行政",sopId:""}
+  ]
+};
+
+// ── STATE ────────────────────────────────────────────────────
+let db = {tasks:[],sops:[],accounts:[],contacts:[],callguide:[]};
+let cfg = {apiUrl:'',folderId:''};
+let pwUnlocked = false;
+let qEditor = null;
+let curSopId = null;
+let taskFlt = {freq:'',cat:'',q:''};
+let sopFlt = {cat:'',q:''};
+let acFlt = '';
+let ctFlt = '';
+let phoneTab = 'cg';
+
+const CFG_KEY = 'mb_admin_config';
+const CACHE_KEY = 'mb_admin_cache';
+const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbxzLW-oeMfJcB3XYkzuo9nLykVN0ZEfnZp2kF52hOLxgVlQflcdm-wqS2o1GTPmojmrwg/exec';
+const DEFAULT_FOLDER_ID = '1sxpqjAxZ0cKFz4NlL0X5Phg8DXBVR4cd';
+const WDL = ['日','一','二','三','四','五','六'];
+const CAT_C = {'行政':'#0E7490','財務':'#1B3A5C','物流':'#0EA5C9','客服':'#F59E0B','其他':'#64748B'};
+const SOP_C = {finance:'#1B3A5C',invoice:'#0E7490',meeting:'#0EA5C9',admin:'#64748B',custom:'#F59E0B','財務':'#1B3A5C','發票':'#0E7490','會議':'#0EA5C9','行政':'#64748B','自訂':'#F59E0B'};
+const SOP_L = {finance:'財務',invoice:'發票',meeting:'會議',admin:'行政',custom:'自訂'};
+const FREQ_L = {daily:'每日',weekly:'每週',monthly:'每月',temp:'臨時'};
+const CT_COLORS = ['#0E7490','#1B3A5C','#0EA5C9','#F59E0B','#64748B','#16A34A','#DC2626'];
+
+// ── HELPERS ──────────────────────────────────────────────────
+function e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function catC(c){return CAT_C[c]||'#64748B'}
+function sopC(c){return SOP_C[c]||'#64748B'}
+function sopL(c){return SOP_L[c]||c}
+function doneKey(){return 'mb_done_'+new Date().toISOString().slice(0,10)}
+function getDone(){try{return JSON.parse(localStorage.getItem(doneKey())||'[]')}catch(x){return[]}}
+function setDone(a){localStorage.setItem(doneKey(),JSON.stringify(a))}
+
+function schedDesc(t){
+  if(t.freq==='daily') return '每日例行';
+  if(t.freq==='weekly'){
+    const d=(t.weekdays||[]).map(d=>'週'+WDL[d]).join('、');
+    return '每週 '+(d||'未設定');
+  }
+  if(t.freq==='monthly'){
+    const d=(t.monthDays||[]).map(d=>typeof d==='number'?'每月'+d+'日':d).join('、');
+    return d||'每月';
+  }
+  return '臨時事項';
+}
+
+function genId(sheet){
+  const p={tasks:'c_',sops:'sop_',accounts:'a_',contacts:'ct_',callguide:'cg_'};
+  return (p[sheet]||'x_')+Date.now();
+}
+
+// ── CONFIG ───────────────────────────────────────────────────
+function loadCfg(){
+  try{const s=localStorage.getItem(CFG_KEY);if(s)cfg={...cfg,...JSON.parse(s)}}catch(x){}
+  if(!cfg.apiUrl) cfg.apiUrl=DEFAULT_API_URL;
+  if(!cfg.folderId) cfg.folderId=DEFAULT_FOLDER_ID;
+  document.getElementById('cfgUrl').value=cfg.apiUrl||'';
+  document.getElementById('cfgFolder').value=cfg.folderId||'';
+  updCfgStatus();
+}
+
+function saveSettings(){
+  cfg.apiUrl=document.getElementById('cfgUrl').value.trim();
+  cfg.folderId=document.getElementById('cfgFolder').value.trim();
+  localStorage.setItem(CFG_KEY,JSON.stringify(cfg));
+  updCfgStatus();
+  toggleSettings();
+  toast('設定已儲存','ok');
+  if(cfg.apiUrl) syncAll();
+}
+
+function updCfgStatus(){
+  const el=document.getElementById('cfgStatus');
+  if(!el) return;
+  el.innerHTML=cfg.apiUrl
+    ?'<div class="notice n-ok">✅ 已設定 API URL，同步功能啟用</div>'
+    :'<div class="notice n-warn">⚠️ 尚未設定 API URL，目前為離線模式</div>';
+}
+
+function toggleSettings(){
+  const p=document.getElementById('spPanel'),o=document.getElementById('spOv');
+  const isOn=p.classList.contains('on');
+  if(isOn){p.classList.remove('on');o.classList.remove('on')}
+  else{
+    document.getElementById('cfgUrl').value=cfg.apiUrl||'';
+    document.getElementById('cfgFolder').value=cfg.folderId||'';
+    updCfgStatus();
+    p.classList.add('on');o.classList.add('on');
+  }
+}
+
+// ── CACHE ────────────────────────────────────────────────────
+function loadCache(){
+  try{
+    const c=localStorage.getItem(CACHE_KEY);
+    if(c){const p=JSON.parse(c);Object.keys(db).forEach(k=>{if(p[k])db[k]=p[k]})}
+    else{db=JSON.parse(JSON.stringify(SEED_DATA));saveCache()}
+  }catch(x){db=JSON.parse(JSON.stringify(SEED_DATA))}
+}
+
+function saveCache(){try{localStorage.setItem(CACHE_KEY,JSON.stringify(db))}catch(x){}}
+
+function clearCache(){
+  localStorage.removeItem(CACHE_KEY);
+  db=JSON.parse(JSON.stringify(SEED_DATA));
+  saveCache(); renderAll(); toggleSettings();
+  toast('快取已清除，已還原預設資料','ok');
+}
+
+// ── API ──────────────────────────────────────────────────────
+async function apiGet(action,params={}){
+  if(!cfg.apiUrl) throw new Error('offline');
+  const qs=new URLSearchParams({action,...params}).toString();
+  const r=await fetch(cfg.apiUrl+'?'+qs);
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  return r.json();
+}
+
+async function apiPost(action,params={},body=null){
+  if(!cfg.apiUrl) throw new Error('offline');
+  const qs=new URLSearchParams({action,...params}).toString();
+  const r=await fetch(cfg.apiUrl+'?'+qs,{
+    method:'POST',headers:{'Content-Type':'text/plain'},
+    body:body?JSON.stringify(body):null
+  });
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  return r.json();
+}
+
+// ── SYNC ─────────────────────────────────────────────────────
+function setSyncLbl(s){
+  const el=document.getElementById('syncLbl');
+  if(!el) return;
+  el.textContent=s==='ok'?'🟢 已同步':s==='syncing'?'🟡 同步中':s==='offline'?'🔴 離線模式':'🔴 同步失敗';
+}
+
+async function syncAll(){
+  if(!cfg.apiUrl){setSyncLbl('offline');return}
+  setSyncLbl('syncing');
+  try{
+    const r=await apiGet('sync_all');
+    if(r.status==='ok'&&r.data){
+      Object.keys(db).forEach(k=>{if(r.data[k])db[k]=r.data[k]});
+      saveCache(); renderAll(); setSyncLbl('ok');
+    } else {setSyncLbl('error');toast('同步失敗: '+(r.message||'未知'),'err')}
+  }catch(x){
+    if(x.message==='offline') setSyncLbl('offline');
+    else{setSyncLbl('error');toast('同步失敗，使用本地快取','err')}
+  }
+}
+
+function triggerSync(){syncAll()}
+
+// ── CRUD ─────────────────────────────────────────────────────
+async function dbCreate(sheet,item){
+  if(!item.id) item.id=genId(sheet);
+  db[sheet].push(item); saveCache();
+  if(cfg.apiUrl){try{await apiPost('create',{sheet},item)}catch(x){toast('⚠️ 本地已儲存，Sheets 同步失敗','err')}}
+  return item;
+}
+
+async function dbUpdate(sheet,item){
+  const i=db[sheet].findIndex(r=>r.id===item.id);
+  if(i!==-1) db[sheet][i]=item; saveCache();
+  if(cfg.apiUrl){try{await apiPost('update',{sheet},item)}catch(x){toast('⚠️ 本地已儲存，Sheets 同步失敗','err')}}
+}
+
+async function dbDelete(sheet,id){
+  db[sheet]=db[sheet].filter(r=>r.id!==id); saveCache();
+  if(cfg.apiUrl){try{await apiPost('delete',{sheet,id})}catch(x){toast('⚠️ 本地已刪除，Sheets 同步失敗','err')}}
+}
+
+async function doInitSeed(){
+  openCfm('初始化確認','確定要把預設資料寫入 Google Sheets？現有資料將被覆蓋。',async()=>{
+    if(!cfg.apiUrl){toast('請先設定 API URL','err');return}
+    setSyncLbl('syncing');
+    try{
+      const r=await apiPost('init_seed',{},SEED_DATA);
+      if(r.status==='ok'){toast('初始化完成！','ok');await syncAll()}
+      else{toast('失敗: '+r.message,'err');setSyncLbl('error')}
+    }catch(x){toast('失敗: '+x.message,'err');setSyncLbl('error')}
+  });
+}
+
+// ── IMAGE UPLOAD ──────────────────────────────────────────────
+async function uploadImg(file){
+  if(!cfg.apiUrl) throw new Error('請先設定 API URL');
+  if(!cfg.folderId) throw new Error('請先設定 Drive 資料夾 ID');
+  const b64=await compressImg(file,1200,0.8);
+  const r=await apiPost('upload_image',{},{base64:b64,filename:file.name,folderId:cfg.folderId});
+  if(r.status!=='ok') throw new Error(r.message);
+  return r.data.url;
+}
+
+function compressImg(file,maxW,q){
+  return new Promise((res,rej)=>{
+    const rd=new FileReader();
+    rd.onload=ev=>{
+      const img=new Image();
+      img.onload=()=>{
+        const cv=document.createElement('canvas');
+        let w=img.width,h=img.height;
+        if(w>maxW){h=Math.round(h*maxW/w);w=maxW}
+        cv.width=w;cv.height=h;
+        cv.getContext('2d').drawImage(img,0,0,w,h);
+        res(cv.toDataURL('image/jpeg',q));
+      };
+      img.onerror=rej;img.src=ev.target.result;
+    };
+    rd.onerror=rej;rd.readAsDataURL(file);
+  });
+}
+
+// ── TAB SWITCHING ────────────────────────────────────────────
+function switchTab(t){
+  document.querySelectorAll('.pane').forEach(el=>el.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('on'));
+  document.getElementById('p-'+t).classList.add('on');
+  document.querySelector('[data-tab="'+t+'"]').classList.add('on');
+  renderTab(t);
+}
+
+function renderAll(){
+  const at=document.querySelector('.tab.on')?.dataset.tab||'dashboard';
+  renderTab(at);
+}
+
+function renderTab(t){
+  if(t==='dashboard') renderDash();
+  else if(t==='tasks') renderTasks();
+  else if(t==='sops') renderSops();
+  else if(t==='accounts') renderAccounts();
+  else if(t==='phone') renderPhone();
+}
+
+// ── MODAL ────────────────────────────────────────────────────
+function openModal(title,body,footer,cb){
+  document.getElementById('modalTitle').textContent=title;
+  document.getElementById('modalBody').innerHTML=body;
+  document.getElementById('modalFt').innerHTML=footer;
+  document.getElementById('modalOv').classList.add('on');
+  if(cb) cb();
+}
+function closeModal(){
+  document.getElementById('modalOv').classList.remove('on');
+  qEditor=null;
+}
+
+function openCfm(title,msg,fn){
+  document.getElementById('cfmTitle').textContent=title;
+  document.getElementById('cfmBody').innerHTML='<p style="font-size:14px;line-height:1.6">'+e(msg)+'</p>';
+  document.getElementById('cfmOk').onclick=()=>{fn();closeCfm()};
+  document.getElementById('cfmOv').classList.add('on');
+}
+function closeCfm(){document.getElementById('cfmOv').classList.remove('on')}
+
+// ── TOAST ────────────────────────────────────────────────────
+function toast(msg,type){
+  const c=document.getElementById('toasts');
+  const el=document.createElement('div');
+  el.className='toast'+(type==='ok'?' ok':type==='err'?' err':'');
+  el.textContent=msg;c.appendChild(el);
+  setTimeout(()=>el.remove(),3000);
+}
+
+function copyText(txt){
+  navigator.clipboard.writeText(txt).then(()=>toast('已複製','ok')).catch(()=>{
+    const ta=document.createElement('textarea');
+    ta.value=txt;document.body.appendChild(ta);ta.select();
+    document.execCommand('copy');document.body.removeChild(ta);
+    toast('已複製','ok');
+  });
+}
+
+// ── DASHBOARD ────────────────────────────────────────────────
+function renderDash(){
+  const now=new Date();
+  const wd=now.getDay();
+  const dt=now.getDate();
+  const mo=now.getMonth()+1;
+  const dim=new Date(now.getFullYear(),mo,0).getDate();
+  const dateStr=now.toLocaleDateString('zh-TW',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
+  const done=getDone();
+
+  const scheduled=db.tasks.filter(t=>{
+    if(t.freq==='daily') return true;
+    if(t.freq==='weekly') return (t.weekdays||[]).includes(wd);
+    if(t.freq==='monthly'){
+      return (t.monthDays||[]).some(d=>{
+        if(typeof d==='number') return d===dt;
+        if(d==='月初') return dt>=1&&dt<=5;
+        if(d==='月中') return dt>=14&&dt<=17;
+        if(d==='月底') return dt>=dim-2;
+        return false;
+      });
+    }
+    return false;
+  });
+
+  const temps=db.tasks.filter(t=>t.freq==='temp');
+  const urgCnt=scheduled.filter(t=>t.urgent&&!done.includes(t.id)).length;
+  const apiWarn=!cfg.apiUrl
+    ?`<div class="notice n-warn">⚠️ 尚未設定 API URL，目前為離線模式 <button class="btn btn-g btn-s" onclick="toggleSettings()" style="margin-left:4px;">前往設定</button></div>`:'';
+
+  let todoHtml='';
+  if(!scheduled.length){todoHtml='<div class="empty">🎉 今天沒有排程事項</div>'}
+  else{
+    scheduled.forEach(t=>{
+      const isDone=done.includes(t.id);
+      const sopLink=t.sopId?`<button class="btn btn-g btn-s" onclick="openSop('${e(t.sopId)}')">📖 SOP</button>`:'';
+      todoHtml+=`<div class="todo${isDone?' done':''}${t.urgent&&!isDone?' urg':''}" id="td-${e(t.id)}">
+        <input type="checkbox" ${isDone?'checked':''} onchange="toggleDone('${e(t.id)}',this.checked)">
+        <div class="todo-c">
+          <div class="todo-n">${e(t.name)}${t.urgent?'<span class="badge badge-u" style="margin-left:6px;">緊急</span>':''}</div>
+          <div class="todo-m">${e(schedDesc(t))} · ${e(t.cat)}</div>
+          ${t.note?`<div class="todo-m">${e(t.note)}</div>`:''}
+        </div>
+        <div class="todo-acts">${sopLink}</div>
+      </div>`;
+    });
+  }
+
+  let tempHtml='';
+  temps.forEach(t=>{
+    const sopLink=t.sopId?`<button class="btn btn-g btn-s" onclick="openSop('${e(t.sopId)}')">📖 SOP</button>`:'';
+    tempHtml+=`<div class="todo${t.urgent?' urg':''}" style="border-left-color:${catC(t.cat)}">
+      <div style="width:4px;"></div>
+      <div class="todo-c" style="padding-left:6px;">
+        <div class="todo-n">${e(t.name)}${t.urgent?'<span class="badge badge-u" style="margin-left:6px;">緊急</span>':''}</div>
+        <div class="todo-m">${e(t.cat)}</div>
+      </div>
+      <div class="todo-acts">${sopLink}</div>
+    </div>`;
+  });
+
+  document.getElementById('p-dashboard').innerHTML=`
+    ${apiWarn}
+    <div class="date-hd">
+      <div class="date-m">${dateStr}</div>
+      <div class="date-s">今日排程 ${scheduled.length} 項，已完成 ${done.length} 項</div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-n n-td">${scheduled.length-done.filter(id=>scheduled.find(t=>t.id===id)).length}</div><div class="stat-l">待辦</div></div>
+      <div class="stat"><div class="stat-n n-dn">${done.filter(id=>scheduled.find(t=>t.id===id)).length}</div><div class="stat-l">完成</div></div>
+      <div class="stat"><div class="stat-n n-ug">${urgCnt}</div><div class="stat-l">緊急</div></div>
+    </div>
+    <div class="sec-t">📋 今日排程（${scheduled.length} 項）</div>
+    ${todoHtml}
+    ${temps.length?`<div class="sec-t">📌 臨時事項（${temps.length} 項）</div>${tempHtml}`:''}
+  `;
+}
+
+function toggleDone(id,checked){
+  const done=getDone();
+  const nd=checked?[...new Set([...done,id])]:done.filter(d=>d!==id);
+  setDone(nd); renderDash();
+}
+
+function openSop(sopId){
+  curSopId=sopId;
+  sopFlt={cat:'',q:''};
+  switchTab('sops');
+}
+
+// ── TASKS ────────────────────────────────────────────────────
+function renderTasks(){
+  const cats=[...new Set(db.tasks.map(t=>t.cat))].filter(Boolean);
+  const filtered=db.tasks.filter(t=>{
+    if(taskFlt.freq&&t.freq!==taskFlt.freq) return false;
+    if(taskFlt.cat&&t.cat!==taskFlt.cat) return false;
+    if(taskFlt.q&&!t.name.includes(taskFlt.q)&&!(t.note||'').includes(taskFlt.q)) return false;
+    return true;
+  });
+
+  const catOpts=cats.map(c=>`<option value="${e(c)}" ${taskFlt.cat===c?'selected':''}>${e(c)}</option>`).join('');
+
+  let html='';
+  if(!filtered.length){html='<div class="empty">沒有符合的事項</div>'}
+  else filtered.forEach(t=>{
+    const sop=t.sopId?db.sops.find(s=>s.id===t.sopId):null;
+    html+=`<div class="tc">
+      <div style="width:4px;border-radius:2px;background:${catC(t.cat)};align-self:stretch;flex-shrink:0;"></div>
+      <div class="tc-m">
+        <div class="tc-n">${e(t.name)}${t.urgent?'<span class="badge badge-u" style="margin-left:6px;">緊急</span>':''}</div>
+        <div class="tc-mt">
+          <span class="tag" style="background:${catC(t.cat)}">${e(t.cat)}</span>
+          <span>${e(FREQ_L[t.freq]||t.freq)}</span>
+          <span>${e(schedDesc(t))}</span>
+          ${sop?`<button class="btn btn-g btn-s" onclick="openSop('${e(t.sopId)}')">📖 ${e(sop.title)}</button>`:''}
+        </div>
+        ${t.note?`<div class="tc-note">${e(t.note)}</div>`:''}
+      </div>
+      <div class="tc-acts">
+        <button class="btn btn-g btn-s" onclick="editTask('${e(t.id)}')">✏️</button>
+        <button class="btn btn-g btn-s" onclick="delTask('${e(t.id)}')">🗑️</button>
+      </div>
+    </div>`;
+  });
+
+  const tsFocused = document.activeElement?.id==='ts-q';
+  document.getElementById('p-tasks').innerHTML=`
+    <div class="sh"><div class="st">例行公事（${db.tasks.length} 項）</div><button class="btn btn-p" onclick="editTask(null)">＋ 新增</button></div>
+    <div class="fbar">
+      <select class="fs" onchange="taskFlt.freq=this.value;renderTasks()">
+        <option value="">全部頻率</option>
+        <option value="daily" ${taskFlt.freq==='daily'?'selected':''}>每日</option>
+        <option value="weekly" ${taskFlt.freq==='weekly'?'selected':''}>每週</option>
+        <option value="monthly" ${taskFlt.freq==='monthly'?'selected':''}>每月</option>
+        <option value="temp" ${taskFlt.freq==='temp'?'selected':''}>臨時</option>
+      </select>
+      <select class="fs" onchange="taskFlt.cat=this.value;renderTasks()">
+        <option value="">全部類別</option>${catOpts}
+      </select>
+      <input id="ts-q" class="fi" type="text" placeholder="搜尋..." value="${e(taskFlt.q)}" oninput="taskFlt.q=this.value;renderTasks()">
+    </div>
+    ${html}`;
+  if(tsFocused){const el=document.getElementById('ts-q');if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length)}}
+}
+
+function editTask(id){
+  const t=id?db.tasks.find(x=>x.id===id):null;
+  const sopOpts=db.sops.map(s=>`<option value="${e(s.id)}" ${t?.sopId===s.id?'selected':''}>${e(s.title)}</option>`).join('');
+  const wdSel=v=>(t?.weekdays||[]).includes(v)?'on':'';
+  const mdSel=v=>(t?.monthDays||[]).some(d=>String(d)===String(v))?'on':'';
+
+  const body=`
+    <div class="fg"><label class="fl">名稱 *</label><input id="tf-n" class="fi" value="${e(t?.name||'')}" placeholder="事項名稱"></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">頻率 *</label>
+        <select id="tf-f" class="fs" onchange="updTaskFreq()">
+          <option value="daily" ${t?.freq==='daily'?'selected':''}>每日</option>
+          <option value="weekly" ${t?.freq==='weekly'?'selected':''}>每週</option>
+          <option value="monthly" ${t?.freq==='monthly'?'selected':''}>每月</option>
+          <option value="temp" ${t?.freq==='temp'?'selected':''}>臨時</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">類別 <span style="font-weight:400;color:var(--gray)">（自行打字輸入）</span></label>
+        ${(()=>{const std=['行政','財務','物流','客服','其他'];const custom=[...new Set(db.tasks.map(x=>x.cat))].filter(c=>c&&!std.includes(c));return`<input id="tf-c" class="fi" list="tf-cat-dl" value="${e(t?.cat||'行政')}" placeholder="選擇或輸入新類別"><datalist id="tf-cat-dl">${[...std,...custom].map(c=>`<option value="${e(c)}">`).join('')}</datalist>`;})()}
+      </div>
+    </div>
+    <div id="tfWd" class="fg" style="display:${t?.freq==='weekly'?'block':'none'}">
+      <label class="fl">執行星期</label>
+      <div class="wdp">${[0,1,2,3,4,5,6].map(d=>`<button type="button" class="wdb ${wdSel(d)}" data-v="${d}" onclick="this.classList.toggle('on')">${WDL[d]}</button>`).join('')}</div>
+    </div>
+    <div id="tfMd" class="fg" style="display:${t?.freq==='monthly'?'block':'none'}">
+      <label class="fl">執行日期</label>
+      <div class="wdp">
+        ${['月初','月中','月底'].map(d=>`<button type="button" class="wdb ${mdSel(d)}" data-v="${d}" onclick="this.classList.toggle('on')">${d}</button>`).join('')}
+        ${[1,5,6,7,8,9,10,15,25].map(d=>`<button type="button" class="wdb ${mdSel(d)}" data-v="${d}" onclick="this.classList.toggle('on')">${d}日</button>`).join('')}
+      </div>
+    </div>
+    <div class="fg"><label class="fl">備註</label><textarea id="tf-nt" class="ft">${e(t?.note||'')}</textarea></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">連結 SOP</label>
+        <select id="tf-sop" class="fs"><option value="">（無）</option>${sopOpts}</select>
+      </div>
+      <div class="fg" style="display:flex;align-items:flex-end;padding-bottom:2px;">
+        <label style="display:flex;gap:8px;align-items:center;cursor:pointer;font-size:13px;">
+          <input type="checkbox" id="tf-ug" ${t?.urgent?'checked':''} style="width:16px;height:16px;accent-color:var(--red)">
+          <span>標記為緊急</span>
+        </label>
+      </div>
+    </div>`;
+
+  openModal(id?'編輯事項':'新增事項',body,
+    `<button class="btn btn-g" onclick="closeModal()">取消</button><button class="btn btn-p" onclick="saveTask('${e(id||'')}')">儲存</button>`);
+}
+
+function updTaskFreq(){
+  const f=document.getElementById('tf-f').value;
+  document.getElementById('tfWd').style.display=f==='weekly'?'block':'none';
+  document.getElementById('tfMd').style.display=f==='monthly'?'block':'none';
+}
+
+async function saveTask(id){
+  const name=document.getElementById('tf-n').value.trim();
+  if(!name){toast('請輸入名稱','err');return}
+  const weekdays=[...document.querySelectorAll('#tfWd .wdb.on')].map(b=>parseInt(b.dataset.v));
+  const monthDays=[...document.querySelectorAll('#tfMd .wdb.on')].map(b=>isNaN(b.dataset.v)?b.dataset.v:parseInt(b.dataset.v));
+  const task={
+    id:id||genId('tasks'),name,
+    freq:document.getElementById('tf-f').value,
+    cat:document.getElementById('tf-c').value.trim()||'行政',
+    weekdays,monthDays,
+    note:document.getElementById('tf-nt').value.trim(),
+    urgent:document.getElementById('tf-ug').checked,
+    sopId:document.getElementById('tf-sop').value
+  };
+  closeModal();
+  if(id){await dbUpdate('tasks',task);toast('已更新','ok')}
+  else{await dbCreate('tasks',task);toast('已新增','ok')}
+  renderTasks();renderDash();
+}
+
+function delTask(id){
+  const t=db.tasks.find(x=>x.id===id);
+  openCfm('刪除事項',`確認刪除「${t?.name}」？此操作無法還原。`,async()=>{
+    await dbDelete('tasks',id);toast('已刪除','ok');renderTasks();renderDash();
+  });
+}
+
+// ── SOPS ─────────────────────────────────────────────────────
+function renderSops(){
+  const cats=[...new Set(db.sops.map(s=>sopL(s.cat)))].filter(Boolean);
+  const filtered=db.sops.filter(s=>{
+    if(sopFlt.cat&&sopL(s.cat)!==sopFlt.cat) return false;
+    if(sopFlt.q&&!s.title.includes(sopFlt.q)&&!(s.html||'').includes(sopFlt.q)) return false;
+    return true;
+  });
+
+  if(!curSopId&&filtered.length) curSopId=filtered[0].id;
+
+  const catBtnsHtml=['',...cats].map(c=>
+    `<button class="btn btn-s ${sopFlt.cat===c?'btn-p':'btn-g'}" onclick="sopFlt.cat='${e(c)}';renderSops()">${c===''?'全部':c}</button>`
+  ).join('');
+
+  const listHtml=filtered.map(s=>`
+    <div class="sop-li ${curSopId===s.id?'on':''}" onclick="curSopId='${e(s.id)}';renderSops()">
+      <div class="sop-dot" style="background:${sopC(s.cat)}"></div>
+      <div class="sop-lt">${e(s.title)}</div>
+    </div>`).join('')||'<div class="empty" style="padding:16px;">無符合結果</div>';
+
+  const sel=db.sops.find(s=>s.id===curSopId);
+  let detailHtml='';
+  if(sel){
+    detailHtml=`
+      <div class="sop-dh">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span class="tag" style="background:${sopC(sel.cat)}">${sopL(sel.cat)}</span>
+          <span class="sop-dt">${e(sel.title)}</span>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-g btn-s" onclick="editSop('${e(sel.id)}')">✏️ 編輯</button>
+          <button class="btn btn-g btn-s" onclick="delSop('${e(sel.id)}')">🗑️</button>
+        </div>
+      </div>
+      <div class="sop-db">
+        <div style="font-size:11px;color:var(--gray);margin-bottom:12px;">更新於 ${e(sel.updatedAt||'')}</div>
+        <div class="sop-content">${sel.html||'<div class="empty">尚無內容</div>'}</div>
+      </div>`;
+  } else {
+    detailHtml='<div class="empty" style="padding:32px;">選擇左側 SOP 查看內容</div>';
+  }
+
+  const sopSearchFocused = document.activeElement?.id==='sop-q';
+  document.getElementById('p-sops').innerHTML=`
+    <div class="sh"><div class="st">SOP 查詢（${db.sops.length} 項）</div><button class="btn btn-p" onclick="editSop(null)">＋ 新增 SOP</button></div>
+    <div class="sop-lay">
+      <div class="sop-lp">
+        <div class="sop-lh">
+          <input id="sop-q" class="fi" type="text" placeholder="搜尋 SOP..." value="${e(sopFlt.q)}" oninput="sopFlt.q=this.value;renderSops()" style="margin-bottom:8px;">
+          <div style="display:flex;gap:4px;flex-wrap:wrap;">${catBtnsHtml}</div>
+        </div>
+        ${listHtml}
+      </div>
+      <div class="sop-dp">${detailHtml}</div>
+    </div>`;
+  if(sopSearchFocused){const el=document.getElementById('sop-q');if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length)}}
+}
+
+function editSop(id){
+  const s=id?db.sops.find(x=>x.id===id):null;
+  const stdCats=Object.values(SOP_L);
+  const customCats=[...new Set(db.sops.map(x=>sopL(x.cat)))].filter(c=>!stdCats.includes(c)&&c);
+  const catDl=[...stdCats,...customCats].map(c=>`<option value="${e(c)}">`).join('');
+  const currentCat=e(sopL(s?.cat||'admin'));
+  const body=`
+    <div class="fg"><label class="fl">標題 *</label><input id="sf-t" class="fi" value="${e(s?.title||'')}" placeholder="SOP 標題"></div>
+    <div class="fg">
+      <label class="fl">分類 <span style="font-weight:400;color:var(--gray)">（自行打字輸入）</span></label>
+      <input id="sf-c" class="fi" list="sop-cat-dl" value="${currentCat}" placeholder="選擇或輸入新類別">
+      <datalist id="sop-cat-dl">${catDl}</datalist>
+    </div>
+    <div class="fg">
+      <label class="fl">內容</label>
+      <div id="sf-qbox"></div>
+      <textarea id="sf-fb" class="ft" style="min-height:200px;display:none;">${e(s?.html||'')}</textarea>
+    </div>
+    <div class="fg">
+      <label class="fl">插入圖片${!cfg.folderId?'（需設定 Drive 資料夾 ID）':''}</label>
+      <input type="file" id="sf-img" accept="image/*" onchange="handleSopImg(this)" ${!cfg.folderId?'disabled':''}>
+      <div id="sf-img-st" style="font-size:11px;color:var(--gray);margin-top:4px;"></div>
+    </div>`;
+
+  openModal(id?'編輯 SOP':'新增 SOP',body,
+    `<button class="btn btn-g" onclick="closeModal()">取消</button><button class="btn btn-p" onclick="saveSop('${e(id||'')}')">儲存</button>`,
+    ()=>initQEditor(s?.html||''));
+}
+
+function initQEditor(content){
+  try{
+    if(typeof Quill==='undefined') throw new Error('no quill');
+    qEditor=new Quill('#sf-qbox',{
+      theme:'snow',
+      modules:{
+        toolbar:{
+          container:[['bold','italic','underline'],
+            [{'list':'ordered'},{'list':'bullet'}],
+            [{'header':[1,2,3,false]}],
+            ['link','image'],['clean']],
+          handlers:{
+            image:()=>{
+              const fi=document.getElementById('sf-img');
+              if(fi&&!fi.disabled) fi.click();
+              else toast('請先設定 Drive 資料夾 ID','err');
+            }
+          }
+        }
+      }
+    });
+    qEditor.root.innerHTML=content;
+  }catch(x){
+    document.getElementById('sf-qbox').style.display='none';
+    const ta=document.getElementById('sf-fb');
+    ta.style.display='block';ta.value=content;qEditor=null;
+  }
+}
+
+async function handleSopImg(input){
+  const file=input.files[0];if(!file) return;
+  const st=document.getElementById('sf-img-st');
+  st.textContent='上傳中...';
+  try{
+    const url=await uploadImg(file);
+    if(qEditor){
+      const r=qEditor.getSelection(true);
+      qEditor.insertEmbed(r?r.index:0,'image',url);
+    } else {
+      const ta=document.getElementById('sf-fb');
+      ta.value+=`<img src="${url}" style="max-width:100%;">`;
+    }
+    st.textContent='✅ 上傳成功';toast('圖片上傳成功','ok');
+  }catch(x){st.textContent='❌ '+x.message;toast('圖片上傳失敗','err')}
+  input.value='';
+}
+
+async function saveSop(id){
+  const title=document.getElementById('sf-t').value.trim();
+  if(!title){toast('請輸入標題','err');return}
+  const html=qEditor?qEditor.root.innerHTML:document.getElementById('sf-fb').value;
+  const sop={id:id||genId('sops'),title,cat:document.getElementById('sf-c').value.trim()||'行政',html,updatedAt:new Date().toISOString().slice(0,10)};
+  closeModal();
+  if(id){await dbUpdate('sops',sop);toast('已更新','ok');curSopId=id}
+  else{await dbCreate('sops',sop);toast('已新增','ok');curSopId=sop.id}
+  renderSops();
+}
+
+function delSop(id){
+  const s=db.sops.find(x=>x.id===id);
+  openCfm('刪除 SOP',`確認刪除「${s?.title}」？`,async()=>{
+    await dbDelete('sops',id);curSopId=null;toast('已刪除','ok');renderSops();
+  });
+}
+
+// ── ACCOUNTS ─────────────────────────────────────────────────
+function renderAccounts(){
+  const filtered=db.accounts.filter(a=>{
+    if(!acFlt) return true;
+    return a.name.includes(acFlt)||(a.company||'').includes(acFlt)||(a.purpose||'').includes(acFlt);
+  });
+
+  const unlockHtml=`
+    <div class="ulkbar">
+      <span>🔐 密碼隱碼中 <em style="font-size:11px;">（簡易隱碼非加密）</em></span>
+      ${pwUnlocked
+        ?`<span style="color:var(--green);font-weight:700;">🔓 已解鎖</span><button class="btn btn-g btn-s" onclick="lockPw()">🔒 上鎖</button>`
+        :`<input type="password" id="pwIn" placeholder="輸入通關碼" maxlength="8" style="padding:4px 8px;border:1px solid var(--border);border-radius:var(--rs);font-size:13px;font-family:inherit;" onkeydown="if(event.key==='Enter')unlockPw()">
+         <button class="btn btn-a btn-s" onclick="unlockPw()">解鎖</button>`}
+    </div>`;
+
+  let html='';
+  if(!filtered.length){html='<div class="empty">沒有符合的帳號</div>'}
+  else filtered.forEach(a=>{
+    const href=a.url?(a.url.startsWith('http')?a.url:'http://'+a.url):'';
+    const urlHtml=a.url?`<a href="${e(href)}" target="_blank" style="color:var(--teal);font-size:12px;word-break:break-all;">${e(a.url)}</a>`:'<span style="color:var(--gray)">—</span>';
+    const userHtml=a.user?`<span class="ac-v">${e(a.user)}</span><button class="cpbtn" onclick="copyText('${e(a.user)}')">📋</button>`:`<span style="color:var(--gray)">—</span>`;
+    const passHtml=a.pass
+      ?(pwUnlocked?`<span class="ac-v">${e(a.pass)}</span><button class="cpbtn" onclick="copyText('${e(a.pass)}')">📋</button>`
+        :`<span style="color:var(--gray);letter-spacing:2px;">••••••••</span>`)
+      :`<span style="color:var(--gray)">（未填）</span>`;
+
+    html+=`<div class="ac">
+      <div class="ac-hd">
+        <div><div class="ac-n">${e(a.name)}</div><div class="ac-co">${e(a.company||'')}${a.purpose?' · '+e(a.purpose):''}</div></div>
+        <div style="display:flex;gap:4px;">
+          <button class="btn btn-g btn-s" onclick="editAccount('${e(a.id)}')">✏️</button>
+          <button class="btn btn-g btn-s" onclick="delAccount('${e(a.id)}')">🗑️</button>
+        </div>
+      </div>
+      <div class="ac-row"><span class="ac-k">URL</span><div style="flex:1;min-width:0;">${urlHtml}</div></div>
+      <div class="ac-row"><span class="ac-k">帳號</span><div style="flex:1;display:flex;align-items:center;gap:4px;">${userHtml}</div></div>
+      <div class="ac-row"><span class="ac-k">密碼</span><div style="flex:1;display:flex;align-items:center;gap:4px;">${passHtml}</div></div>
+      ${a.note?`<div style="font-size:11px;color:var(--gray);padding-top:4px;padding-left:40px;">${e(a.note)}</div>`:''}
+    </div>`;
+  });
+
+  const acFocused = document.activeElement?.id==='ac-q';
+  document.getElementById('p-accounts').innerHTML=`
+    <div class="sh"><div class="st">帳密索引（${db.accounts.length} 筆）</div><button class="btn btn-p" onclick="editAccount(null)">＋ 新增</button></div>
+    ${unlockHtml}
+    <div style="margin-bottom:12px;"><input id="ac-q" class="fi" type="text" placeholder="搜尋帳號、公司、用途..." value="${e(acFlt)}" oninput="acFlt=this.value;renderAccounts()"></div>
+    ${html}`;
+  if(acFocused){const el=document.getElementById('ac-q');if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length)}}
+}
+
+function unlockPw(){
+  const v=document.getElementById('pwIn')?.value;
+  if(v==='28672056'){pwUnlocked=true;toast('已解鎖','ok');renderAccounts()}
+  else toast('通關碼錯誤','err');
+}
+function lockPw(){pwUnlocked=false;renderAccounts()}
+
+function editAccount(id){
+  const a=id?db.accounts.find(x=>x.id===id):null;
+  const body=`
+    <div class="fg"><label class="fl">名稱 *</label><input id="af-n" class="fi" value="${e(a?.name||'')}" placeholder="系統名稱"></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">公司</label><input id="af-co" class="fi" value="${e(a?.company||'')}" placeholder="公司/單位"></div>
+      <div class="fg"><label class="fl">用途</label><input id="af-pu" class="fi" value="${e(a?.purpose||'')}" placeholder="系統用途"></div>
+    </div>
+    <div class="fg"><label class="fl">URL</label><input id="af-u" class="fi" value="${e(a?.url||'')}" placeholder="https://..."></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">帳號</label><input id="af-un" class="fi" value="${e(a?.user||'')}" placeholder="登入帳號"></div>
+      <div class="fg"><label class="fl">密碼</label><input id="af-pw" class="fi" type="text" value="${e(a?.pass||'')}" placeholder="密碼（明文儲存）"></div>
+    </div>
+    <div class="fg"><label class="fl">備註</label><textarea id="af-nt" class="ft">${e(a?.note||'')}</textarea></div>`;
+
+  openModal(id?'編輯帳號':'新增帳號',body,
+    `<button class="btn btn-g" onclick="closeModal()">取消</button><button class="btn btn-p" onclick="saveAccount('${e(id||'')}')">儲存</button>`);
+}
+
+async function saveAccount(id){
+  const name=document.getElementById('af-n').value.trim();
+  if(!name){toast('請輸入名稱','err');return}
+  const acc={
+    id:id||genId('accounts'),name,
+    company:document.getElementById('af-co').value.trim(),
+    purpose:document.getElementById('af-pu').value.trim(),
+    url:document.getElementById('af-u').value.trim(),
+    user:document.getElementById('af-un').value.trim(),
+    pass:document.getElementById('af-pw').value,
+    note:document.getElementById('af-nt').value.trim()
+  };
+  closeModal();
+  if(id){await dbUpdate('accounts',acc);toast('已更新','ok')}
+  else{await dbCreate('accounts',acc);toast('已新增','ok')}
+  renderAccounts();
+}
+
+function delAccount(id){
+  const a=db.accounts.find(x=>x.id===id);
+  openCfm('刪除帳號',`確認刪除「${a?.name}」？`,async()=>{
+    await dbDelete('accounts',id);toast('已刪除','ok');renderAccounts();
+  });
+}
+
+// ── PHONE ────────────────────────────────────────────────────
+function renderPhone(){
+  const ctFocused = document.activeElement?.id==='ct-q';
+  const cgHtml=buildCg();
+  const ctHtml=buildCt();
+  document.getElementById('p-phone').innerHTML=`
+    <div class="sh">
+      <div style="display:flex;gap:8px;">
+        <button class="btn ${phoneTab==='cg'?'btn-p':'btn-g'}" onclick="phoneTab='cg';renderPhone()">📋 特殊來電</button>
+        <button class="btn ${phoneTab==='ct'?'btn-p':'btn-g'}" onclick="phoneTab='ct';renderPhone()">👥 聯絡人</button>
+      </div>
+      <button class="btn btn-p" onclick="${phoneTab==='cg'?'editCg(null)':'editCt(null)'}">＋ 新增</button>
+    </div>
+    ${phoneTab==='cg'?cgHtml:ctHtml}`;
+  if(ctFocused){const el=document.getElementById('ct-q');if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length)}}
+}
+
+function buildCg(){
+  if(!db.callguide.length) return '<div class="empty">尚無特殊來電指引</div>';
+  return db.callguide.map(cg=>{
+    const sop=cg.sopId?db.sops.find(s=>s.id===cg.sopId):null;
+    return `<div class="cgc">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div class="cgc-sc">${e(cg.scene)}</div>
+        <div style="display:flex;gap:4px;">
+          <button class="btn btn-g btn-s" onclick="editCg('${e(cg.id)}')">✏️</button>
+          <button class="btn btn-g btn-s" onclick="delCg('${e(cg.id)}')">🗑️</button>
+        </div>
+      </div>
+      <div class="cgc-h">${e(cg.handling)}</div>
+      <div class="cgc-mt">
+        <span>👤 ${e(cg.owner||'')}</span>
+        ${sop?`<button class="btn btn-g btn-s" onclick="openSop('${e(cg.sopId)}')">📖 ${e(sop.title)}</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function buildCt(){
+  const filtered=db.contacts.filter(c=>{
+    if(!ctFlt) return true;
+    return c.name.includes(ctFlt)||(c.role||'').includes(ctFlt)||(c.email||'').includes(ctFlt);
+  });
+  const search=`<div style="margin-bottom:12px;"><input id="ct-q" class="fi" type="text" placeholder="搜尋聯絡人..." value="${e(ctFlt)}" oninput="ctFlt=this.value;renderPhone()"></div>`;
+  if(!filtered.length) return search+'<div class="empty">沒有符合的聯絡人</div>';
+  return search+filtered.map(c=>`
+    <div class="ctc">
+      <div class="ctc-av" style="background:${e(c.color||'#64748B')}">${e(c.name.charAt(0))}</div>
+      <div class="ctc-m">
+        <div class="ctc-n">${e(c.name)}</div>
+        <div class="ctc-r">${e(c.role||'')}</div>
+        <div class="ctc-i">
+          ${c.email?`<span>✉️ <a href="mailto:${e(c.email)}" style="color:var(--teal);">${e(c.email)}</a> <button class="cpbtn" onclick="copyText('${e(c.email)}')">📋</button></span>`:''}
+          ${c.phone?`<span>📞 ${e(c.phone)} <button class="cpbtn" onclick="copyText('${e(c.phone)}')">📋</button></span>`:''}
+        </div>
+      </div>
+      <div style="display:flex;gap:4px;">
+        <button class="btn btn-g btn-s" onclick="editCt('${e(c.id)}')">✏️</button>
+        <button class="btn btn-g btn-s" onclick="delCt('${e(c.id)}')">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+function editCg(id){
+  const cg=id?db.callguide.find(x=>x.id===id):null;
+  const sopOpts=db.sops.map(s=>`<option value="${e(s.id)}" ${cg?.sopId===s.id?'selected':''}>${e(s.title)}</option>`).join('');
+  const body=`
+    <div class="fg"><label class="fl">來電情境 *</label><input id="cg-sc" class="fi" value="${e(cg?.scene||'')}" placeholder="例：客戶要退票"></div>
+    <div class="fg"><label class="fl">處理方式 *</label><textarea id="cg-h" class="ft">${e(cg?.handling||'')}</textarea></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">負責窗口</label><input id="cg-ow" class="fi" value="${e(cg?.owner||'')}" placeholder="部門/人員"></div>
+      <div class="fg"><label class="fl">連結 SOP</label><select id="cg-sop" class="fs"><option value="">（無）</option>${sopOpts}</select></div>
+    </div>`;
+  openModal(id?'編輯來電指引':'新增來電指引',body,
+    `<button class="btn btn-g" onclick="closeModal()">取消</button><button class="btn btn-p" onclick="saveCg('${e(id||'')}')">儲存</button>`);
+}
+
+async function saveCg(id){
+  const scene=document.getElementById('cg-sc').value.trim();
+  const handling=document.getElementById('cg-h').value.trim();
+  if(!scene||!handling){toast('請填寫情境和處理方式','err');return}
+  const cg={id:id||genId('callguide'),scene,handling,owner:document.getElementById('cg-ow').value.trim(),sopId:document.getElementById('cg-sop').value};
+  closeModal();
+  if(id){await dbUpdate('callguide',cg);toast('已更新','ok')}
+  else{await dbCreate('callguide',cg);toast('已新增','ok')}
+  renderPhone();
+}
+
+function delCg(id){
+  const cg=db.callguide.find(x=>x.id===id);
+  openCfm('刪除指引',`確認刪除「${cg?.scene}」？`,async()=>{
+    await dbDelete('callguide',id);toast('已刪除','ok');renderPhone();
+  });
+}
+
+function editCt(id){
+  const ct=id?db.contacts.find(x=>x.id===id):null;
+  const swatches=CT_COLORS.map(c=>`<div class="cs ${ct?.color===c?'on':''}" style="background:${c};" data-c="${c}" onclick="selCtC(this)"></div>`).join('');
+  const body=`
+    <input type="hidden" id="ct-c" value="${e(ct?.color||CT_COLORS[0])}">
+    <div class="fr">
+      <div class="fg"><label class="fl">姓名 *</label><input id="ct-n" class="fi" value="${e(ct?.name||'')}" placeholder="姓名"></div>
+      <div class="fg"><label class="fl">職稱/角色</label><input id="ct-r" class="fi" value="${e(ct?.role||'')}" placeholder="職稱或負責項目"></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Email</label><input id="ct-e" class="fi" value="${e(ct?.email||'')}" placeholder="email@example.com"></div>
+      <div class="fg"><label class="fl">電話</label><input id="ct-p" class="fi" value="${e(ct?.phone||'')}" placeholder="02-xxxx-xxxx"></div>
+    </div>
+    <div class="fg"><label class="fl">色標</label><div class="csrow">${swatches}</div></div>`;
+  openModal(id?'編輯聯絡人':'新增聯絡人',body,
+    `<button class="btn btn-g" onclick="closeModal()">取消</button><button class="btn btn-p" onclick="saveCt('${e(id||'')}')">儲存</button>`);
+}
+
+function selCtC(el){
+  document.querySelectorAll('.csrow .cs').forEach(s=>s.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('ct-c').value=el.dataset.c;
+}
+
+async function saveCt(id){
+  const name=document.getElementById('ct-n').value.trim();
+  if(!name){toast('請輸入姓名','err');return}
+  const ct={
+    id:id||genId('contacts'),name,
+    role:document.getElementById('ct-r').value.trim(),
+    email:document.getElementById('ct-e').value.trim(),
+    phone:document.getElementById('ct-p').value.trim(),
+    color:document.getElementById('ct-c').value
+  };
+  closeModal();
+  if(id){await dbUpdate('contacts',ct);toast('已更新','ok')}
+  else{await dbCreate('contacts',ct);toast('已新增','ok')}
+  renderPhone();
+}
+
+function delCt(id){
+  const ct=db.contacts.find(x=>x.id===id);
+  openCfm('刪除聯絡人',`確認刪除「${ct?.name}」？`,async()=>{
+    await dbDelete('contacts',id);toast('已刪除','ok');renderPhone();
+  });
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+function init(){
+  loadCfg(); loadCache(); renderAll();
+  if(cfg.apiUrl) syncAll(); else setSyncLbl('offline');
+  window.addEventListener('online',()=>{if(cfg.apiUrl) syncAll()});
+  window.addEventListener('offline',()=>setSyncLbl('offline'));
+}
+
+init();
+</script>
+</body>
+</html>
