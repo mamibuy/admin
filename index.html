@@ -536,7 +536,7 @@ async function doInitSeed(){
 async function uploadImg(file){
   if(!cfg.apiUrl) throw new Error('請先設定 API URL');
   if(!cfg.folderId) throw new Error('請先設定 Drive 資料夾 ID');
-  const b64=await compressImg(file,1200,0.8);
+  const b64=await compressImg(file,3000,0.95);
   const r=await apiPost('upload_image',{},{base64:b64,filename:file.name,folderId:cfg.folderId});
   if(r.status!=='ok') throw new Error(r.message);
   return r.data.url;
@@ -553,7 +553,8 @@ function compressImg(file,maxW,q){
         if(w>maxW){h=Math.round(h*maxW/w);w=maxW}
         cv.width=w;cv.height=h;
         cv.getContext('2d').drawImage(img,0,0,w,h);
-        res(cv.toDataURL('image/jpeg',q));
+        const fmt=file.type==='image/png'?'image/png':'image/jpeg';
+        res(cv.toDataURL(fmt,fmt==='image/png'?undefined:q));
       };
       img.onerror=rej;img.src=ev.target.result;
     };
