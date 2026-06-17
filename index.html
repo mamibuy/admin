@@ -369,7 +369,7 @@ const WDL = ['日','一','二','三','四','五','六'];
 const CAT_C = {'行政':'#0E7490','財務':'#1B3A5C','物流':'#0EA5C9','客服':'#F59E0B','其他':'#64748B'};
 const SOP_C = {finance:'#1B3A5C',invoice:'#0E7490',meeting:'#0EA5C9',admin:'#64748B',custom:'#F59E0B','財務':'#1B3A5C','發票':'#0E7490','會議':'#0EA5C9','行政':'#64748B','自訂':'#F59E0B'};
 const SOP_L = {finance:'財務',invoice:'發票',meeting:'會議',admin:'行政',custom:'自訂'};
-const FREQ_L = {daily:'每日',weekly:'每週',monthly:'每月',temp:'臨時'};
+const FREQ_L = {daily:'每日',weekly:'每週',monthly:'每月',yearly:'每年',temp:'臨時'};
 const CT_COLORS = ['#0E7490','#1B3A5C','#0EA5C9','#F59E0B','#64748B','#16A34A','#DC2626'];
 
 // ── HELPERS ──────────────────────────────────────────────────
@@ -390,6 +390,10 @@ function schedDesc(t){
   if(t.freq==='monthly'){
     const d=(t.monthDays||[]).map(d=>typeof d==='number'?'每月'+d+'日':d).join('、');
     return d||'每月';
+  }
+  if(t.freq==='yearly'){
+    const m=(t.yearMonths||[]).map(m=>m+'月').join('、');
+    return '每年 '+(m||'未設定');
   }
   return '臨時事項';
 }
@@ -645,6 +649,7 @@ function renderDash(){
         return false;
       });
     }
+    if(t.freq==='yearly') return (t.yearMonths||[]).includes(mo);
     return false;
   });
 
@@ -757,6 +762,7 @@ function renderTasks(){
         <option value="daily" ${taskFlt.freq==='daily'?'selected':''}>每日</option>
         <option value="weekly" ${taskFlt.freq==='weekly'?'selected':''}>每週</option>
         <option value="monthly" ${taskFlt.freq==='monthly'?'selected':''}>每月</option>
+        <option value="yearly" ${taskFlt.freq==='yearly'?'selected':''}>每年</option>
         <option value="temp" ${taskFlt.freq==='temp'?'selected':''}>臨時</option>
       </select>
       <select class="fs" onchange="taskFlt.cat=this.value;renderTasks()">
@@ -773,6 +779,7 @@ function editTask(id){
   const sopOpts=db.sops.map(s=>`<option value="${e(s.id)}" ${t?.sopId===s.id?'selected':''}>${e(s.title)}</option>`).join('');
   const wdSel=v=>(t?.weekdays||[]).includes(v)?'on':'';
   const mdSel=v=>(t?.monthDays||[]).some(d=>String(d)===String(v))?'on':'';
+  const ymSel=v=>(t?.yearMonths||[]).includes(v)?'on':'';
 
   const body=`
     <div class="fg"><label class="fl">名稱 *</label><input id="tf-n" class="fi" value="${e(t?.name||'')}" placeholder="事項名稱"></div>
@@ -782,6 +789,7 @@ function editTask(id){
           <option value="daily" ${t?.freq==='daily'?'selected':''}>每日</option>
           <option value="weekly" ${t?.freq==='weekly'?'selected':''}>每週</option>
           <option value="monthly" ${t?.freq==='monthly'?'selected':''}>每月</option>
+          <option value="yearly" ${t?.freq==='yearly'?'selected':''}>每年</option>
           <option value="temp" ${t?.freq==='temp'?'selected':''}>臨時</option>
         </select>
       </div>
@@ -798,6 +806,12 @@ function editTask(id){
       <div class="wdp">
         ${['月初','月中','月底'].map(d=>`<button type="button" class="wdb ${mdSel(d)}" data-v="${d}" onclick="this.classList.toggle('on')">${d}</button>`).join('')}
         ${[1,5,6,7,8,9,10,15,25].map(d=>`<button type="button" class="wdb ${mdSel(d)}" data-v="${d}" onclick="this.classList.toggle('on')">${d}日</button>`).join('')}
+      </div>
+    </div>
+    <div id="tfYm" class="fg" style="display:${t?.freq==='yearly'?'block':'none'}">
+      <label class="fl">執行月份</label>
+      <div class="wdp">
+        ${[1,2,3,4,5,6,7,8,9,10,11,12].map(m=>`<button type="button" class="wdb ${ymSel(m)}" data-v="${m}" onclick="this.classList.toggle('on')">${m}月</button>`).join('')}
       </div>
     </div>
     <div class="fg"><label class="fl">備註</label><textarea id="tf-nt" class="ft">${e(t?.note||'')}</textarea></div>
@@ -821,6 +835,7 @@ function updTaskFreq(){
   const f=document.getElementById('tf-f').value;
   document.getElementById('tfWd').style.display=f==='weekly'?'block':'none';
   document.getElementById('tfMd').style.display=f==='monthly'?'block':'none';
+  document.getElementById('tfYm').style.display=f==='yearly'?'block':'none';
 }
 
 async function saveTask(id){
@@ -828,11 +843,12 @@ async function saveTask(id){
   if(!name){toast('請輸入名稱','err');return}
   const weekdays=[...document.querySelectorAll('#tfWd .wdb.on')].map(b=>parseInt(b.dataset.v));
   const monthDays=[...document.querySelectorAll('#tfMd .wdb.on')].map(b=>isNaN(b.dataset.v)?b.dataset.v:parseInt(b.dataset.v));
+  const yearMonths=[...document.querySelectorAll('#tfYm .wdb.on')].map(b=>parseInt(b.dataset.v));
   const task={
     id:id||genId('tasks'),name,
     freq:document.getElementById('tf-f').value,
     cat:document.getElementById('tf-c').value.trim()||'行政',
-    weekdays,monthDays,
+    weekdays,monthDays,yearMonths,
     note:document.getElementById('tf-nt').value.trim(),
     urgent:document.getElementById('tf-ug').checked,
     sopId:document.getElementById('tf-sop').value
