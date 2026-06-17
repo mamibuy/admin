@@ -172,6 +172,7 @@ input[list]::-webkit-calendar-picker-indicator{display:none}
 .ql-toolbar.ql-snow{border-radius:var(--rs) var(--rs) 0 0}
 .ql-container.ql-snow{border-radius:0 0 var(--rs) var(--rs);height:320px}
 .ql-editor{height:100%;overflow-y:auto;box-sizing:border-box}
+#tf-nq .ql-container.ql-snow{height:150px}
 </style>
 </head>
 <body>
@@ -354,6 +355,7 @@ let db = {tasks:[],sops:[],accounts:[],contacts:[],callguide:[]};
 let cfg = {apiUrl:'',folderId:''};
 let pwUnlocked = false;
 let qEditor = null;
+let noteEditor = null;
 let curSopId = null;
 let taskFlt = {freq:'',cat:'',q:''};
 let sopFlt = {cat:'',q:''};
@@ -598,7 +600,7 @@ function openModal(title,body,footer,cb){
 }
 function closeModal(){
   document.getElementById('modalOv').classList.remove('on');
-  qEditor=null;
+  qEditor=null;noteEditor=null;
 }
 
 function openCfm(title,msg,fn){
@@ -744,7 +746,7 @@ function renderTasks(){
           <span>${e(schedDesc(t))}</span>
           ${sop?`<button class="btn btn-g btn-s" onclick="openSop('${e(t.sopId)}')">📖 ${e(sop.title)}</button>`:''}
         </div>
-        ${t.note?`<div class="tc-note" style="${t.noteColor?'color:'+t.noteColor:''}">${e(t.note)}</div>`:''}
+        ${t.note&&t.note!=='<p><br></p>'?`<div class="tc-note">${t.note}</div>`:''}
       </div>
       <div class="tc-acts">
         <button class="btn btn-g btn-s" onclick="editTask('${e(t.id)}')">✏️</button>
@@ -816,14 +818,8 @@ function editTask(id){
     </div>
     <div class="fg">
       <label class="fl">備註</label>
-      <textarea id="tf-nt" class="ft">${e(t?.note||'')}</textarea>
-      <input type="hidden" id="tf-nc" value="${e(t?.noteColor||'')}">
-      <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
-        <span style="font-size:12px;color:var(--gray)">備註顏色</span>
-        <div class="csrow" id="nc-row">
-          ${[['','#94a3b8'],['#DC2626','#DC2626'],['#F59E0B','#F59E0B'],['#16A34A','#16A34A'],['#0E7490','#0E7490'],['#1B3A5C','#1B3A5C']].map(([v,bg])=>`<div class="cs ${(t?.noteColor||'')==v?'on':''}" style="background:${bg};" data-c="${v}" onclick="selNoteC(this)"></div>`).join('')}
-        </div>
-      </div>
+      <div id="tf-nq"></div>
+      <textarea id="tf-nb" class="ft" style="display:none"></textarea>
     </div>
     <div class="fr">
       <div class="fg"><label class="fl">連結 SOP</label>
@@ -838,7 +834,8 @@ function editTask(id){
     </div>`;
 
   openModal(id?'編輯事項':'新增事項',body,
-    `<button class="btn btn-g" onclick="closeModal()">取消</button><button class="btn btn-p" onclick="saveTask('${e(id||'')}')">儲存</button>`);
+    `<button class="btn btn-g" onclick="closeModal()">取消</button><button class="btn btn-p" onclick="saveTask('${e(id||'')}')">儲存</button>`,
+    ()=>initNoteEditor(t?.note||''));
 }
 
 function updTaskFreq(){
@@ -859,8 +856,7 @@ async function saveTask(id){
     freq:document.getElementById('tf-f').value,
     cat:document.getElementById('tf-c').value.trim()||'行政',
     weekdays,monthDays,yearMonths,
-    note:document.getElementById('tf-nt').value.trim(),
-    noteColor:document.getElementById('tf-nc').value,
+    note:noteEditor?noteEditor.root.innerHTML:document.getElementById('tf-nb').value,
     urgent:document.getElementById('tf-ug').checked,
     sopId:document.getElementById('tf-sop').value
   };
@@ -963,6 +959,21 @@ function editSop(id){
   openModal(id?'編輯 SOP':'新增 SOP',body,
     `<button class="btn btn-g" onclick="closeModal()">取消</button><button class="btn btn-p" onclick="saveSop('${e(id||'')}')">儲存</button>`,
     ()=>initQEditor(s?.html||''));
+}
+
+function initNoteEditor(content){
+  try{
+    if(typeof Quill==='undefined') throw new Error();
+    noteEditor=new Quill('#tf-nq',{
+      theme:'snow',
+      modules:{toolbar:[['bold','italic','underline'],[{'color':[]}],[{'list':'bullet'}],['clean']]}
+    });
+    noteEditor.root.innerHTML=content||'';
+  }catch(x){
+    document.getElementById('tf-nq').style.display='none';
+    const ta=document.getElementById('tf-nb');
+    ta.style.display='block';ta.value=content||'';noteEditor=null;
+  }
 }
 
 function initQEditor(content){
@@ -1251,12 +1262,6 @@ function selCtC(el){
   el.closest('.csrow').querySelectorAll('.cs').forEach(s=>s.classList.remove('on'));
   el.classList.add('on');
   document.getElementById('ct-c').value=el.dataset.c;
-}
-
-function selNoteC(el){
-  document.querySelectorAll('#nc-row .cs').forEach(s=>s.classList.remove('on'));
-  el.classList.add('on');
-  document.getElementById('tf-nc').value=el.dataset.c;
 }
 
 async function saveCt(id){
