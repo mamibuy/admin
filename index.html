@@ -1159,6 +1159,7 @@ function buildCt(){
         <div class="ctc-i">
           ${c.email?`<span>✉️ <a href="mailto:${e(c.email)}" style="color:var(--teal);">${e(c.email)}</a> <button class="cpbtn" onclick="copyText('${e(c.email)}')">📋</button></span>`:''}
           ${c.phone?`<span>📞 ${e(c.phone)} <button class="cpbtn" onclick="copyText('${e(c.phone)}')">📋</button></span>`:''}
+          ${c.lineGroup?`<span>💬 ${e(c.lineGroup)} <button class="cpbtn" onclick="copyText('${e(c.lineGroup)}')">📋</button></span>`:''}
         </div>
       </div>
       <div style="display:flex;gap:4px;">
@@ -1213,6 +1214,7 @@ function editCt(id){
       <div class="fg"><label class="fl">Email</label><input id="ct-e" class="fi" value="${e(ct?.email||'')}" placeholder="email@example.com"></div>
       <div class="fg"><label class="fl">電話</label><input id="ct-p" class="fi" value="${e(ct?.phone||'')}" placeholder="02-xxxx-xxxx"></div>
     </div>
+    <div class="fg"><label class="fl">LINE 群標題</label><input id="ct-lg" class="fi" value="${e(ct?.lineGroup||'')}" placeholder="例：mamibuy 客服群"></div>
     <div class="fg"><label class="fl">色標</label><div class="csrow">${swatches}</div></div>`;
   openModal(id?'編輯聯絡人':'新增聯絡人',body,
     `<button class="btn btn-g" onclick="closeModal()">取消</button><button class="btn btn-p" onclick="saveCt('${e(id||'')}')">儲存</button>`);
@@ -1232,6 +1234,7 @@ async function saveCt(id){
     role:document.getElementById('ct-r').value.trim(),
     email:document.getElementById('ct-e').value.trim(),
     phone:document.getElementById('ct-p').value.trim(),
+    lineGroup:document.getElementById('ct-lg').value.trim(),
     color:document.getElementById('ct-c').value
   };
   closeModal();
