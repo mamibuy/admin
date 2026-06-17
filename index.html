@@ -744,7 +744,7 @@ function renderTasks(){
           <span>${e(schedDesc(t))}</span>
           ${sop?`<button class="btn btn-g btn-s" onclick="openSop('${e(t.sopId)}')">📖 ${e(sop.title)}</button>`:''}
         </div>
-        ${t.note?`<div class="tc-note">${e(t.note)}</div>`:''}
+        ${t.note?`<div class="tc-note" style="${t.noteColor?'color:'+t.noteColor:''}">${e(t.note)}</div>`:''}
       </div>
       <div class="tc-acts">
         <button class="btn btn-g btn-s" onclick="editTask('${e(t.id)}')">✏️</button>
@@ -814,7 +814,17 @@ function editTask(id){
         ${[1,2,3,4,5,6,7,8,9,10,11,12].map(m=>`<button type="button" class="wdb ${ymSel(m)}" data-v="${m}" onclick="this.classList.toggle('on')">${m}月</button>`).join('')}
       </div>
     </div>
-    <div class="fg"><label class="fl">備註</label><textarea id="tf-nt" class="ft">${e(t?.note||'')}</textarea></div>
+    <div class="fg">
+      <label class="fl">備註</label>
+      <textarea id="tf-nt" class="ft">${e(t?.note||'')}</textarea>
+      <input type="hidden" id="tf-nc" value="${e(t?.noteColor||'')}">
+      <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+        <span style="font-size:12px;color:var(--gray)">備註顏色</span>
+        <div class="csrow" id="nc-row">
+          ${[['','#94a3b8'],['#DC2626','#DC2626'],['#F59E0B','#F59E0B'],['#16A34A','#16A34A'],['#0E7490','#0E7490'],['#1B3A5C','#1B3A5C']].map(([v,bg])=>`<div class="cs ${(t?.noteColor||'')==v?'on':''}" style="background:${bg};" data-c="${v}" onclick="selNoteC(this)"></div>`).join('')}
+        </div>
+      </div>
+    </div>
     <div class="fr">
       <div class="fg"><label class="fl">連結 SOP</label>
         <select id="tf-sop" class="fs"><option value="">（無）</option>${sopOpts}</select>
@@ -850,6 +860,7 @@ async function saveTask(id){
     cat:document.getElementById('tf-c').value.trim()||'行政',
     weekdays,monthDays,yearMonths,
     note:document.getElementById('tf-nt').value.trim(),
+    noteColor:document.getElementById('tf-nc').value,
     urgent:document.getElementById('tf-ug').checked,
     sopId:document.getElementById('tf-sop').value
   };
@@ -1237,9 +1248,15 @@ function editCt(id){
 }
 
 function selCtC(el){
-  document.querySelectorAll('.csrow .cs').forEach(s=>s.classList.remove('on'));
+  el.closest('.csrow').querySelectorAll('.cs').forEach(s=>s.classList.remove('on'));
   el.classList.add('on');
   document.getElementById('ct-c').value=el.dataset.c;
+}
+
+function selNoteC(el){
+  document.querySelectorAll('#nc-row .cs').forEach(s=>s.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('tf-nc').value=el.dataset.c;
 }
 
 async function saveCt(id){
